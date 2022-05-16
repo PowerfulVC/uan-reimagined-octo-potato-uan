@@ -10,10 +10,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val nativeView = LayoutInflater.from(this)
-            .inflate(
-                R.layout.ad_layout,
-                null
-            ) as CardView
+//        val nativeView = LayoutInflater.from(this)
+//            .inflate(
+//                R.layout.ad_layout,
+//                null
+//            ) as CardView
     }
 }
