@@ -62,8 +62,12 @@ class AppOpenManager(private val app: Application, private val unit: String) :
     }
 
     private fun showAdIfAvailable() {
-        if ((currentActivity!!::class.java.simpleName == "SplashActivity"))
-            return
+        try {
+            if ((currentActivity!!::class.java.simpleName == "SplashActivity"))
+                return
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         Log.e("UAN", "SHOWOPEN:" + (!isShowingAd) + "|" + isAdAvailable)
         if (isAdAvailable) {
             Log.d("tag", "will show ad ")
