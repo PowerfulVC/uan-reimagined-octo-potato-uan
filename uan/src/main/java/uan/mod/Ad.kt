@@ -41,7 +41,6 @@ class Ad(activity: Application) {
     private var mInterstitialAd: InterstitialAd? = null
     private var adView: AdView? = null
 
-    var nativeAdResourceId =
 
     fun initialize(projectId: String, action: (success: Boolean) -> Unit) {
         lastUsedProjectId = projectId
@@ -266,7 +265,7 @@ class Ad(activity: Application) {
         if (adUnit == null) return
         if (adUnit!!.app.isNotEmpty()) {
             try {
-                val adLoader = AdLoader.Builder(frameLayout.context, adUnit!!.native)
+                val  adLoader = AdLoader.Builder(frameLayout.context, adUnit!!.native)
                     .forNativeAd { nativeAd: NativeAd ->
                         try {
                             mapUnifiedNativeAdToLayout(nativeAd, unifiedNativeAdView)
