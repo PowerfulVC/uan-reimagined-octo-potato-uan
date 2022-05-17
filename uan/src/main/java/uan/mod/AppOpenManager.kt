@@ -41,6 +41,8 @@ class AppOpenManager(private val app: Application, private val unit : String) : 
         loadCallback = object : AppOpenAd.AppOpenAdLoadCallback() {
             override fun onAdLoaded(p0: AppOpenAd) {
                 super.onAdLoaded(p0)
+                appOpenAd = p0
+
                 Log.e("Info", "OnOpenAdLoaded")
             }
 

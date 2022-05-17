@@ -180,6 +180,7 @@ class Ad(activity: Application) {
 
                     override fun onAdFailedToShowFullScreenContent(adError: AdError?) {
                         Log.d(ContentValues.TAG, "Ad failed to show.")
+                        onAdClosed.invoke()
                     }
 
                     override fun onAdShowedFullScreenContent() {
