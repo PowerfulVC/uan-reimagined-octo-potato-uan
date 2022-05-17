@@ -35,7 +35,7 @@ import javax.security.auth.callback.Callback
 
 class Ad(activity: Application) {
     private val act = activity
-    private var adUnit: AdUnit? = null
+    var adUnit: AdUnit? = null
     private var initInProgress = false
     private var lastUsedProjectId = ""
     private var mInterstitialAd: InterstitialAd? = null
