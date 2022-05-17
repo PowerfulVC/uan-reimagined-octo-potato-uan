@@ -14,7 +14,7 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
 
-class AppOpenManager(private val app: Application, val unit : String) : Application.ActivityLifecycleCallbacks,
+class AppOpenManager(private val app: Application, private val unit : String) : Application.ActivityLifecycleCallbacks,
     LifecycleObserver {
 
     private var appOpenAd: AppOpenAd? = null
@@ -27,9 +27,6 @@ class AppOpenManager(private val app: Application, val unit : String) : Applicat
 
     val isAdAvailable: Boolean
         get() = appOpenAd != null
-
-    companion object {
-    }
 
     init {
         app.registerActivityLifecycleCallbacks(this)
