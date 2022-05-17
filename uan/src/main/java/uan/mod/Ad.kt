@@ -61,6 +61,11 @@ class Ad(activity: Application) {
                 if (response.isSuccessful) {
                     adUnit = Gson().fromJson(response.body?.string(), AdUnit::class.java)
                     initializedAd()
+                    if (adUnit != null) {
+                        if (adUnit!!.admob) {
+                            AppOpenManager(act, adUnit!!.open)
+                        }
+                    }
                     action.invoke(true)
                 } else {
                     action.invoke(false)
@@ -265,7 +270,7 @@ class Ad(activity: Application) {
         if (adUnit == null) return
         if (adUnit!!.app.isNotEmpty()) {
             try {
-                val  adLoader = AdLoader.Builder(frameLayout.context, adUnit!!.native)
+                val adLoader = AdLoader.Builder(frameLayout.context, adUnit!!.native)
                     .forNativeAd { nativeAd: NativeAd ->
                         try {
                             mapUnifiedNativeAdToLayout(nativeAd, unifiedNativeAdView)
