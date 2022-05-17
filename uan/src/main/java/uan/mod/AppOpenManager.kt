@@ -14,7 +14,8 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
 
-class AppOpenManager(private val app: Application, private val unit : String) : Application.ActivityLifecycleCallbacks,
+class AppOpenManager(private val app: Application, private val unit: String) :
+    Application.ActivityLifecycleCallbacks,
     LifecycleObserver {
 
     private var appOpenAd: AppOpenAd? = null
@@ -61,8 +62,10 @@ class AppOpenManager(private val app: Application, private val unit : String) : 
     }
 
     private fun showAdIfAvailable() {
+        if ((currentActivity!!::class.java.simpleName == "SplashActivity"))
+            return
         Log.e("UAN", "SHOWOPEN:" + (!isShowingAd) + "|" + isAdAvailable)
-        if (!isShowingAd && isAdAvailable) {
+        if (isAdAvailable) {
             Log.d("tag", "will show ad ")
             val fullScreenContentCallback: FullScreenContentCallback =
                 object : FullScreenContentCallback() {
@@ -120,4 +123,5 @@ class AppOpenManager(private val app: Application, private val unit : String) : 
         showAdIfAvailable()
         Log.d("UAN", "onStart::::")
     }
+
 }
