@@ -34,16 +34,20 @@ class AppOpenManager(private val app: Application, private val unit : String) : 
     }
 
     fun fetchAd() {
+        Log.e("Info", "OpenLoadStart")
         if (isAdAvailable) {
             return
         }
         loadCallback = object : AppOpenAd.AppOpenAdLoadCallback() {
             override fun onAdLoaded(p0: AppOpenAd) {
                 super.onAdLoaded(p0)
+                Log.e("Info", "OnOpenAdLoaded")
             }
 
             override fun onAdFailedToLoad(p0: LoadAdError) {
                 super.onAdFailedToLoad(p0)
+                Log.e("Info", "OpenFailedtoLoad:" + p0.responseInfo)
+
             }
         }
         val request = adRequest
@@ -55,6 +59,7 @@ class AppOpenManager(private val app: Application, private val unit : String) : 
     }
 
     private fun showAdIfAvailable() {
+        Log.e("UAN", "SHOWOPEN:" + (!isShowingAd) + "|" + isAdAvailable)
         if (!isShowingAd && isAdAvailable) {
             Log.d("tag", "will show ad ")
             val fullScreenContentCallback: FullScreenContentCallback =
