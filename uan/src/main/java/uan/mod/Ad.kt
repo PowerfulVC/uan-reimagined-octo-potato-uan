@@ -3,6 +3,7 @@ package uan.mod
 import android.app.Activity
 import android.app.Application
 import android.content.ContentValues
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -13,6 +14,7 @@ import android.util.Log
 import android.view.Display
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -36,6 +38,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import javax.security.auth.callback.Callback
+import kotlin.math.roundToInt
 
 class Ad(activity: Application) {
     private val act = activity
@@ -266,6 +269,50 @@ class Ad(activity: Application) {
         return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(activity, adWidth)
     }
 
+
+    fun showAdInFrame(
+        activity: Activity,
+        frameLayout: FrameLayout,
+        font: Typeface,
+        textColorHex: String,
+        adBodyHex: String,
+        btnHex: String,
+        btnTextHex: String,
+    ) {
+        val viewTreeObserver = frameLayout.viewTreeObserver
+        viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                frameLayout.viewTreeObserver.removeGlobalOnLayoutListener(this);
+                val height = frameLayout.height
+                val heightDp = frameLayout.context.pxToDp(height)
+                when {
+                    heightDp >= 270 -> {
+                        showNative(frameLayout, font, textColorHex, adBodyHex, btnHex, btnTextHex)
+                    }
+                    heightDp >= 150 -> {
+                        showNativeSmall(
+                            frameLayout,
+                            font,
+                            textColorHex,
+                            adBodyHex,
+                            btnHex,
+                            btnTextHex
+                        )
+                    }
+                    height >= 50 -> {
+                        showBanner(activity, frameLayout)
+                    }
+                }
+            }
+        })
+    }
+
+    fun Context.pxToDp(px: Int): Int {
+        val displayMetrics: DisplayMetrics = resources.displayMetrics
+        return (px / (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
+    }
+
     fun showNative(
         frameLayout: FrameLayout,
         font: Typeface,
@@ -283,6 +330,67 @@ class Ad(activity: Application) {
                             val unifiedNativeAdView = LayoutInflater.from(frameLayout.context)
                                 .inflate(
                                     R.layout.ad_layoujt,
+                                    null
+                                ) as CardView
+                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(adBodyHex))
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_call_to_action).typeface =
+                                font
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface = font
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline).typeface =
+                                font
+                            //set text color
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_body)
+                                .setTextColor(Color.parseColor(textColorHex))
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline)
+                                .setTextColor(Color.parseColor(textColorHex))
+                            //set btn color
+                            unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action).backgroundTintList =
+                                ColorStateList.valueOf(Color.parseColor(btnHex))
+                            unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action)
+                                .setTextColor(Color.parseColor(btnTextHex))
+                            mapUnifiedNativeAdToLayout(nativeAd, unifiedNativeAdView)
+                            frameLayout.removeAllViews()
+                            frameLayout.addView(unifiedNativeAdView)
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                    .withAdListener(object : AdListener() {
+                        override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                            super.onAdFailedToLoad(loadAdError)
+                            Log.d("AdInfo", "Native failed to load $loadAdError")
+                        }
+
+                        override fun onAdClosed() {}
+                        override fun onAdOpened() {}
+                        override fun onAdClicked() {}
+                    })
+                    .build()
+                adLoader.loadAd(AdRequest.Builder().build())
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+
+    fun showNativeSmall(
+        frameLayout: FrameLayout,
+        font: Typeface,
+        textColorHex: String,
+        adBodyHex: String,
+        btnHex: String,
+        btnTextHex: String,
+    ) {
+        if (adUnit == null) return
+        if (adUnit!!.app.isNotEmpty()) {
+            try {
+                val adLoader = AdLoader.Builder(frameLayout.context, adUnit!!.native)
+                    .forNativeAd { nativeAd: NativeAd ->
+                        try {
+                            val unifiedNativeAdView = LayoutInflater.from(frameLayout.context)
+                                .inflate(
+                                    R.layout.ad_layout_small,
                                     null
                                 ) as CardView
                             unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(adBodyHex))
