@@ -26,11 +26,10 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
+import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
+import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
 import com.google.gson.Gson
-import com.unity3d.ads.IUnityAdsLoadListener
-import com.unity3d.ads.IUnityAdsShowListener
-import com.unity3d.ads.UnityAds
-import com.unity3d.ads.UnityAdsShowOptions
+import com.unity3d.ads.*
 import com.unity3d.services.banners.BannerView
 import com.unity3d.services.banners.UnityBannerSize
 import kotlinx.coroutines.*
@@ -39,6 +38,7 @@ import okhttp3.Request
 import okhttp3.Response
 import javax.security.auth.callback.Callback
 import kotlin.math.roundToInt
+
 
 class Ad(activity: Application) {
     private val act = activity
@@ -152,6 +152,58 @@ class Ad(activity: Application) {
                                 mInterstitialAd = interstitialAd
                             }
                         })
+        }
+    }
+
+    fun loadAndShowAdmobReward(
+        activity: Activity,
+        onLoadStart: (loadStart: Boolean) -> Unit,
+        onAdClosed: (rewarded: Boolean) -> Unit
+    ) {
+        if (adUnit == null) {
+            onLoadStart.invoke(false)
+            return
+        }
+        GlobalScope.launch(Dispatchers.Main) {
+            if (adUnit!!.app.isNotEmpty()) {
+                var rewardedInterstitialAd: RewardedInterstitialAd? = null
+                var rewarded = false
+                if (rewardedInterstitialAd == null) {
+                    onLoadStart.invoke(true)
+                    RewardedInterstitialAd.load(act, adUnit!!.rewarded,
+                        AdRequest.Builder().build(), object : RewardedInterstitialAdLoadCallback() {
+                            override fun onAdLoaded(ad: RewardedInterstitialAd) {
+                                rewardedInterstitialAd = ad
+                                rewardedInterstitialAd?.fullScreenContentCallback =
+                                    object : FullScreenContentCallback() {
+                                        override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                                            onAdClosed.invoke(false)
+                                        }
+
+                                        override fun onAdShowedFullScreenContent() {}
+
+                                        override fun onAdDismissedFullScreenContent() {
+                                            onAdClosed.invoke(rewarded)
+                                        }
+                                    }
+                                rewardedInterstitialAd!!.show(
+                                    activity
+                                ) { rewarded = true }
+                                Log.e("UAN", "Ad was loaded.")
+                            }
+
+                            override fun onAdFailedToLoad(adError: LoadAdError) {
+                                Log.e("UAN", adError.message)
+                                rewardedInterstitialAd = null
+                                onAdClosed.invoke(false)
+                            }
+                        })
+                } else {
+                    onLoadStart.invoke(false)
+                }
+            } else {
+                onLoadStart.invoke(false)
+            }
         }
     }
 
