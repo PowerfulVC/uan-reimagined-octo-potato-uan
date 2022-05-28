@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.ConnectivityManager
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Display
@@ -29,7 +30,10 @@ import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
 import com.google.gson.Gson
-import com.unity3d.ads.*
+import com.unity3d.ads.IUnityAdsLoadListener
+import com.unity3d.ads.IUnityAdsShowListener
+import com.unity3d.ads.UnityAds
+import com.unity3d.ads.UnityAdsShowOptions
 import com.unity3d.services.banners.BannerView
 import com.unity3d.services.banners.UnityBannerSize
 import kotlinx.coroutines.*
@@ -47,7 +51,7 @@ class Ad(activity: Application) {
     private var lastUsedProjectId = ""
     private var mInterstitialAd: InterstitialAd? = null
     private var adView: AdView? = null
-
+    private var rewardedAd: CompletableDeferred<RewardedInterstitialAd>? = CompletableDeferred()
 
     fun initialize(projectId: String, action: (success: Boolean) -> Unit) {
         lastUsedProjectId = projectId
@@ -105,9 +109,10 @@ class Ad(activity: Application) {
 
     private fun loadAd() {
         if (adUnit == null) return
-        if (adUnit!!.admob)
+        if (adUnit!!.admob) {
             loadAdmobInter()
-        else
+            loadAdmobReward()
+        } else
             loadUnityAdInter()
     }
 
@@ -152,6 +157,71 @@ class Ad(activity: Application) {
                                 mInterstitialAd = interstitialAd
                             }
                         })
+        }
+    }
+
+    suspend fun showAdmobReward(
+        activity: Activity,
+        action: (rewarded: Boolean) -> Unit
+    ) {
+        var rewarded = false
+        if (rewardedAd != null && userIsOnline(activity)) {
+            val rewAd = rewardedAd?.await()
+            if (rewAd == null) {
+                action.invoke(!false)
+                return
+            }
+            rewAd.fullScreenContentCallback = object : FullScreenContentCallback() {
+                override fun onAdDismissedFullScreenContent() {
+                    super.onAdDismissedFullScreenContent()
+                    action.invoke(rewarded)
+                    loadAdmobReward()
+                }
+
+                override fun onAdFailedToShowFullScreenContent(p0: AdError?) {
+                    super.onAdFailedToShowFullScreenContent(p0)
+                    action.invoke(rewarded)
+                }
+            }
+            rewAd.show(activity) {
+                rewarded = true
+            }
+
+        } else {
+            action.invoke(false)
+        }
+    }
+
+    private fun loadAdmobReward() {
+        if (adUnit == null) {
+            return
+        }
+        rewardedAd = CompletableDeferred()
+        GlobalScope.launch(Dispatchers.Main) {
+            RewardedInterstitialAd.load(
+                act,
+                adUnit!!.rewarded,
+                AdRequest.Builder().build(),
+                object : RewardedInterstitialAdLoadCallback() {
+                    override fun onAdLoaded(p0: RewardedInterstitialAd) {
+                        super.onAdLoaded(p0)
+                        rewardedAd?.complete(p0)
+                    }
+
+                    override fun onAdFailedToLoad(p0: LoadAdError) {
+                        super.onAdFailedToLoad(p0)
+                        rewardedAd = null
+                    }
+                })
+        }
+    }
+
+    private fun userIsOnline(context: Context): Boolean {
+        return try {
+            (context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).activeNetworkInfo?.isConnectedOrConnecting
+                ?: false
+        } catch (unused: Exception) {
+            false
         }
     }
 
