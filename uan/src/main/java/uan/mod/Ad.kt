@@ -193,7 +193,7 @@ class Ad(activity: Application) {
                     action.invoke(rewarded)
                 }
             }
-            GlobalScope.launch {
+            GlobalScope.launch(Dispatchers.Main) {
                 rewAd.show(activity) {
                     rewarded = true
                 }
