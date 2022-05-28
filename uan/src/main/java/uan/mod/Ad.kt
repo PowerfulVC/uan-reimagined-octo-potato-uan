@@ -193,10 +193,11 @@ class Ad(activity: Application) {
                     action.invoke(rewarded)
                 }
             }
-            rewAd.show(activity) {
-                rewarded = true
+            GlobalScope.launch {
+                rewAd.show(activity) {
+                    rewarded = true
+                }
             }
-
         } else {
             action.invoke(false)
         }
