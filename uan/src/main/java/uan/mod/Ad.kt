@@ -52,8 +52,14 @@ class Ad(activity: Application) {
     private var mInterstitialAd: InterstitialAd? = null
     private var adView: AdView? = null
     private var rewardedAd: CompletableDeferred<RewardedInterstitialAd>? = CompletableDeferred()
+    private var premiumUser = false
 
-    fun initialize(projectId: String, action: (success: Boolean) -> Unit) {
+    fun initialize(
+        projectId: String,
+        action: (success: Boolean) -> Unit,
+        premiumUser: Boolean = false
+    ) {
+        this.premiumUser = premiumUser
         lastUsedProjectId = projectId
         initInProgress = true
         val request = Request.Builder()
@@ -108,7 +114,7 @@ class Ad(activity: Application) {
     }
 
     private fun loadAd() {
-        if (adUnit == null) return
+        if (adUnit == null || premiumUser) return
         if (adUnit!!.admob) {
             loadAdmobInter()
             loadAdmobReward()
@@ -117,7 +123,7 @@ class Ad(activity: Application) {
     }
 
     private fun loadUnityAdInter() {
-        if (adUnit == null) {
+        if (adUnit == null || premiumUser) {
             return
         }
         UnityAds.load(adUnit!!.interstitial, object : IUnityAdsLoadListener {
@@ -137,7 +143,7 @@ class Ad(activity: Application) {
     }
 
     private fun loadAdmobInter() {
-        if (adUnit == null)
+        if (adUnit == null || premiumUser)
             return
         GlobalScope.launch(Dispatchers.Main) {
             if (adUnit!!.app.isNotEmpty())
@@ -164,6 +170,10 @@ class Ad(activity: Application) {
         activity: Activity,
         action: (rewarded: Boolean) -> Unit
     ) {
+        if (premiumUser) {
+            action.invoke(true)
+            return
+        }
         var rewarded = false
         if (rewardedAd != null && userIsOnline(activity)) {
             val rewAd = rewardedAd?.await()
@@ -193,7 +203,7 @@ class Ad(activity: Application) {
     }
 
     private fun loadAdmobReward() {
-        if (adUnit == null) {
+        if (adUnit == null || premiumUser) {
             return
         }
         rewardedAd = CompletableDeferred()
@@ -230,7 +240,7 @@ class Ad(activity: Application) {
         onLoadStart: (loadStart: Boolean) -> Unit,
         onAdClosed: (rewarded: Boolean) -> Unit
     ) {
-        if (adUnit == null) {
+        if (adUnit == null || premiumUser) {
             onLoadStart.invoke(false)
             return
         }
@@ -279,19 +289,23 @@ class Ad(activity: Application) {
 
     fun showInter(activity: Activity, onAdClosed: () -> Unit) {
         if (adUnit == null && !initInProgress) {
-            initialize(lastUsedProjectId) {
+            initialize(lastUsedProjectId, {
                 if (it) {
                     showRealInter(onAdClosed, activity)
                 } else {
                     onAdClosed.invoke()
                 }
-            }
+            }, premiumUser)
         } else {
             showRealInter(onAdClosed, activity)
         }
     }
 
     private fun showRealInter(onAdClosed: () -> Unit, activity: Activity) {
+        if (premiumUser) {
+            onAdClosed.invoke()
+            return
+        }
         if (adUnit?.admob == true) {
             showAdmobInter(onAdClosed, activity)
         } else {
@@ -300,6 +314,10 @@ class Ad(activity: Application) {
     }
 
     private fun showAdmobInter(onAdClosed: () -> Unit, activity: Activity) {
+        if (premiumUser) {
+            onAdClosed.invoke()
+            return
+        }
         if (mInterstitialAd != null) {
             mInterstitialAd?.fullScreenContentCallback =
                 object : FullScreenContentCallback() {
@@ -325,7 +343,14 @@ class Ad(activity: Application) {
     }
 
     private fun showUnityAdInter(onAdClosed: () -> Unit, activity: Activity) {
-        if (adUnit == null) return
+        if (premiumUser) {
+            onAdClosed.invoke()
+            return
+        }
+        if (adUnit == null) {
+            onAdClosed.invoke()
+            return
+        }
         UnityAds.show(activity, adUnit!!.interstitial, UnityAdsShowOptions(),
             object : IUnityAdsShowListener {
                 override fun onUnityAdsShowFailure(
@@ -351,6 +376,9 @@ class Ad(activity: Application) {
     }
 
     fun showBanner(activity: Activity, bannerView: FrameLayout) {
+        if (premiumUser) {
+            return
+        }
         if (adUnit == null) return
         if (adUnit!!.app.isNotEmpty()) {
             if (adUnit!!.admob) {
@@ -374,6 +402,9 @@ class Ad(activity: Application) {
     }
 
     private fun loadBanner(activity: Activity) {
+        if (premiumUser) {
+            return
+        }
         val adRequest = AdRequest.Builder()
             .build()
         val adSize: AdSize = getAdSize(activity)
@@ -401,6 +432,9 @@ class Ad(activity: Application) {
         btnHex: String,
         btnTextHex: String,
     ) {
+        if (premiumUser) {
+            return
+        }
         val viewTreeObserver = frameLayout.viewTreeObserver
         viewTreeObserver.addOnGlobalLayoutListener(object :
             ViewTreeObserver.OnGlobalLayoutListener {
@@ -443,7 +477,7 @@ class Ad(activity: Application) {
         btnHex: String,
         btnTextHex: String,
     ) {
-        if (adUnit == null) return
+        if (adUnit == null || premiumUser) return
         if (adUnit!!.app.isNotEmpty()) {
             try {
                 val adLoader = AdLoader.Builder(frameLayout.context, adUnit!!.native)
@@ -504,7 +538,7 @@ class Ad(activity: Application) {
         btnHex: String,
         btnTextHex: String,
     ) {
-        if (adUnit == null) return
+        if (adUnit == null || premiumUser) return
         if (adUnit!!.app.isNotEmpty()) {
             try {
                 val adLoader = AdLoader.Builder(frameLayout.context, adUnit!!.native)
