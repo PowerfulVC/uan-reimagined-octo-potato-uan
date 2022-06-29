@@ -40,6 +40,8 @@ import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import uan.mod.configs.AdUnit
+import uan.mod.configs.UaNativeAd
 import javax.security.auth.callback.Callback
 import kotlin.math.roundToInt
 
@@ -426,12 +428,7 @@ class Ad(activity: Application) {
 
     fun showAdInFrame(
         activity: Activity,
-        frameLayout: FrameLayout,
-        font: Typeface,
-        textColorHex: String,
-        adBodyHex: String,
-        btnHex: String,
-        btnTextHex: String,
+        frameLayout: FrameLayout
     ) {
         if (premiumUser) {
             return
@@ -445,16 +442,11 @@ class Ad(activity: Application) {
                 val heightDp = frameLayout.context.pxToDp(height)
                 when {
                     heightDp >= 270 -> {
-                        showNative(frameLayout, font, textColorHex, adBodyHex, btnHex, btnTextHex)
+                        showNative(frameLayout)
                     }
                     heightDp >= 150 -> {
                         showNativeSmall(
-                            frameLayout,
-                            font,
-                            textColorHex,
-                            adBodyHex,
-                            btnHex,
-                            btnTextHex
+                            frameLayout
                         )
                     }
                     height >= 50 -> {
@@ -471,14 +463,11 @@ class Ad(activity: Application) {
     }
 
     fun showNative(
-        frameLayout: FrameLayout,
-        font: Typeface,
-        textColorHex: String,
-        adBodyHex: String,
-        btnHex: String,
-        btnTextHex: String,
+        frameLayout: FrameLayout
     ) {
         if (adUnit == null || premiumUser) return
+        if (UaNativeAd.adBodyHex == null)
+            return
         if (adUnit!!.app.isNotEmpty()) {
             try {
                 val adLoader = AdLoader.Builder(frameLayout.context, adUnit!!.native)
@@ -489,22 +478,23 @@ class Ad(activity: Application) {
                                     R.layout.ad_layoujt,
                                     null
                                 ) as CardView
-                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(adBodyHex))
+                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(UaNativeAd.adBodyHex))
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_call_to_action).typeface =
-                                font
-                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface = font
+                                UaNativeAd.font
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface =
+                                UaNativeAd.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline).typeface =
-                                font
+                                UaNativeAd.font
                             //set text color
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body)
-                                .setTextColor(Color.parseColor(textColorHex))
+                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline)
-                                .setTextColor(Color.parseColor(textColorHex))
+                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
                             //set btn color
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action).backgroundTintList =
-                                ColorStateList.valueOf(Color.parseColor(btnHex))
+                                ColorStateList.valueOf(Color.parseColor(UaNativeAd.btnHex))
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action)
-                                .setTextColor(Color.parseColor(btnTextHex))
+                                .setTextColor(Color.parseColor(UaNativeAd.btnTextHex))
                             mapUnifiedNativeAdToLayout(nativeAd, unifiedNativeAdView)
                             frameLayout.removeAllViews()
                             frameLayout.addView(unifiedNativeAdView)
@@ -532,12 +522,7 @@ class Ad(activity: Application) {
 
 
     fun showNativeSmall(
-        frameLayout: FrameLayout,
-        font: Typeface,
-        textColorHex: String,
-        adBodyHex: String,
-        btnHex: String,
-        btnTextHex: String,
+        frameLayout: FrameLayout
     ) {
         if (adUnit == null || premiumUser) return
         if (adUnit!!.app.isNotEmpty()) {
@@ -550,22 +535,23 @@ class Ad(activity: Application) {
                                     R.layout.ad_layout_small,
                                     null
                                 ) as CardView
-                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(adBodyHex))
+                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(UaNativeAd.adBodyHex))
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_call_to_action).typeface =
-                                font
-                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface = font
+                                UaNativeAd.font
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface =
+                                UaNativeAd.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline).typeface =
-                                font
+                                UaNativeAd.font
                             //set text color
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body)
-                                .setTextColor(Color.parseColor(textColorHex))
+                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline)
-                                .setTextColor(Color.parseColor(textColorHex))
+                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
                             //set btn color
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action).backgroundTintList =
-                                ColorStateList.valueOf(Color.parseColor(btnHex))
+                                ColorStateList.valueOf(Color.parseColor(UaNativeAd.btnHex))
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action)
-                                .setTextColor(Color.parseColor(btnTextHex))
+                                .setTextColor(Color.parseColor(UaNativeAd.btnTextHex))
                             mapUnifiedNativeAdToLayout(nativeAd, unifiedNativeAdView)
                             frameLayout.removeAllViews()
                             frameLayout.addView(unifiedNativeAdView)
@@ -591,33 +577,95 @@ class Ad(activity: Application) {
         }
     }
 
-    private fun mapUnifiedNativeAdToLayout(adFromGoogle: NativeAd, card: CardView) {
-        val myAdView: NativeAdView =
-            card.findViewById(R.id.unifiedNativeAdView)
-        val mediaView: MediaView =
-            myAdView.findViewById(R.id.ad_media)
-        myAdView.mediaView = mediaView
-        myAdView.headlineView = myAdView.findViewById(R.id.ad_headline)
-        myAdView.bodyView = myAdView.findViewById(R.id.ad_body)
-        myAdView.callToActionView = myAdView.findViewById(R.id.ad_call_to_action)
-        myAdView.iconView = myAdView.findViewById(R.id.ad_icon)
-        (myAdView.headlineView as TextView).text = adFromGoogle.headline
-        if (adFromGoogle.body == null) {
-            myAdView.bodyView?.visibility = View.GONE
-        } else {
-            (myAdView.bodyView as TextView).text = adFromGoogle.body
+    companion object {
+
+        fun showNative(
+            frameLayout: FrameLayout, adUnit: String
+        ) {
+            if (UaNativeAd.adBodyHex == null)
+                return
+            try {
+                val adLoader = AdLoader.Builder(frameLayout.context, adUnit)
+                    .forNativeAd { nativeAd: NativeAd ->
+                        try {
+                            val unifiedNativeAdView = LayoutInflater.from(frameLayout.context)
+                                .inflate(
+                                    R.layout.ad_layoujt,
+                                    null
+                                ) as CardView
+                            unifiedNativeAdView.setCardBackgroundColor(
+                                Color.parseColor(
+                                    UaNativeAd.adBodyHex
+                                )
+                            )
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_call_to_action).typeface =
+                                UaNativeAd.font
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface =
+                                UaNativeAd.font
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline).typeface =
+                                UaNativeAd.font
+                            //set text color
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_body)
+                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
+                            unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline)
+                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
+                            //set btn color
+                            unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action).backgroundTintList =
+                                ColorStateList.valueOf(Color.parseColor(UaNativeAd.btnHex))
+                            unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action)
+                                .setTextColor(Color.parseColor(UaNativeAd.btnTextHex))
+                            mapUnifiedNativeAdToLayout(nativeAd, unifiedNativeAdView)
+                            frameLayout.removeAllViews()
+                            frameLayout.addView(unifiedNativeAdView)
+                        } catch (e: java.lang.Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                    .withAdListener(object : AdListener() {
+                        override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                            super.onAdFailedToLoad(loadAdError)
+                            Log.d("AdInfo", "Native failed to load $loadAdError")
+                        }
+
+                        override fun onAdClosed() {}
+                        override fun onAdOpened() {}
+                        override fun onAdClicked() {}
+                    })
+                    .build()
+                adLoader.loadAd(AdRequest.Builder().build())
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+            }
         }
-        if (adFromGoogle.callToAction == null) {
-            myAdView.callToActionView?.visibility = View.GONE
-        } else {
-            (myAdView.callToActionView as Button).text = adFromGoogle.callToAction
+
+        private fun mapUnifiedNativeAdToLayout(adFromGoogle: NativeAd, card: CardView) {
+            val myAdView: NativeAdView =
+                card.findViewById(R.id.unifiedNativeAdView)
+            val mediaView: MediaView =
+                myAdView.findViewById(R.id.ad_media)
+            myAdView.mediaView = mediaView
+            myAdView.headlineView = myAdView.findViewById(R.id.ad_headline)
+            myAdView.bodyView = myAdView.findViewById(R.id.ad_body)
+            myAdView.callToActionView = myAdView.findViewById(R.id.ad_call_to_action)
+            myAdView.iconView = myAdView.findViewById(R.id.ad_icon)
+            (myAdView.headlineView as TextView).text = adFromGoogle.headline
+            if (adFromGoogle.body == null) {
+                myAdView.bodyView?.visibility = View.GONE
+            } else {
+                (myAdView.bodyView as TextView).text = adFromGoogle.body
+            }
+            if (adFromGoogle.callToAction == null) {
+                myAdView.callToActionView?.visibility = View.GONE
+            } else {
+                (myAdView.callToActionView as Button).text = adFromGoogle.callToAction
+            }
+            if (adFromGoogle.icon == null) {
+                myAdView.iconView?.visibility = View.GONE
+            } else {
+                (myAdView.iconView as ImageView).setImageDrawable(adFromGoogle.icon?.drawable)
+            }
+            myAdView.setNativeAd(adFromGoogle)
         }
-        if (adFromGoogle.icon == null) {
-            myAdView.iconView?.visibility = View.GONE
-        } else {
-            (myAdView.iconView as ImageView).setImageDrawable(adFromGoogle.icon?.drawable)
-        }
-        myAdView.setNativeAd(adFromGoogle)
     }
 
 }

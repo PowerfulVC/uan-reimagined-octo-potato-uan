@@ -1,4 +1,4 @@
-package uan.mod
+package uan.mod.configs
 
 import com.google.gson.annotations.SerializedName
 
