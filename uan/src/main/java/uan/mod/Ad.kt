@@ -49,6 +49,7 @@ import kotlin.math.roundToInt
 class Ad(activity: Application) {
     private val act = activity
     var adUnit: AdUnit? = null
+    var nativeAdConfig: UaNativeAd = UaNativeAd()
     private var initInProgress = false
     private var lastUsedProjectId = ""
     private var mInterstitialAd: InterstitialAd? = null
@@ -466,7 +467,7 @@ class Ad(activity: Application) {
         frameLayout: FrameLayout
     ) {
         if (adUnit == null || premiumUser) return
-        if (UaNativeAd.adBodyHex == null)
+        if (nativeAdConfig.adBodyHex == null)
             return
         if (adUnit!!.app.isNotEmpty()) {
             try {
@@ -478,23 +479,23 @@ class Ad(activity: Application) {
                                     R.layout.ad_layoujt,
                                     null
                                 ) as CardView
-                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(UaNativeAd.adBodyHex))
+                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(nativeAdConfig.adBodyHex))
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_call_to_action).typeface =
-                                UaNativeAd.font
+                                nativeAdConfig.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface =
-                                UaNativeAd.font
+                                nativeAdConfig.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline).typeface =
-                                UaNativeAd.font
+                                nativeAdConfig.font
                             //set text color
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body)
-                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
+                                .setTextColor(Color.parseColor(nativeAdConfig.textColorHex))
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline)
-                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
+                                .setTextColor(Color.parseColor(nativeAdConfig.textColorHex))
                             //set btn color
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action).backgroundTintList =
-                                ColorStateList.valueOf(Color.parseColor(UaNativeAd.btnHex))
+                                ColorStateList.valueOf(Color.parseColor(nativeAdConfig.btnHex))
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action)
-                                .setTextColor(Color.parseColor(UaNativeAd.btnTextHex))
+                                .setTextColor(Color.parseColor(nativeAdConfig.btnTextHex))
                             mapUnifiedNativeAdToLayout(nativeAd, unifiedNativeAdView)
                             frameLayout.removeAllViews()
                             frameLayout.addView(unifiedNativeAdView)
@@ -535,23 +536,23 @@ class Ad(activity: Application) {
                                     R.layout.ad_layout_small,
                                     null
                                 ) as CardView
-                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(UaNativeAd.adBodyHex))
+                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(nativeAdConfig.adBodyHex))
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_call_to_action).typeface =
-                                UaNativeAd.font
+                                nativeAdConfig.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface =
-                                UaNativeAd.font
+                                nativeAdConfig.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline).typeface =
-                                UaNativeAd.font
+                                nativeAdConfig.font
                             //set text color
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body)
-                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
+                                .setTextColor(Color.parseColor(nativeAdConfig.textColorHex))
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline)
-                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
+                                .setTextColor(Color.parseColor(nativeAdConfig.textColorHex))
                             //set btn color
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action).backgroundTintList =
-                                ColorStateList.valueOf(Color.parseColor(UaNativeAd.btnHex))
+                                ColorStateList.valueOf(Color.parseColor(nativeAdConfig.btnHex))
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action)
-                                .setTextColor(Color.parseColor(UaNativeAd.btnTextHex))
+                                .setTextColor(Color.parseColor(nativeAdConfig.btnTextHex))
                             mapUnifiedNativeAdToLayout(nativeAd, unifiedNativeAdView)
                             frameLayout.removeAllViews()
                             frameLayout.addView(unifiedNativeAdView)
@@ -580,9 +581,9 @@ class Ad(activity: Application) {
     companion object {
 
         fun showNative(
-            frameLayout: FrameLayout, adUnit: String
+            frameLayout: FrameLayout, adUnit: String, nativeAdConfig: UaNativeAd
         ) {
-            if (UaNativeAd.adBodyHex == null)
+            if (nativeAdConfig.adBodyHex == null)
                 return
             try {
                 val adLoader = AdLoader.Builder(frameLayout.context, adUnit)
@@ -595,25 +596,25 @@ class Ad(activity: Application) {
                                 ) as CardView
                             unifiedNativeAdView.setCardBackgroundColor(
                                 Color.parseColor(
-                                    UaNativeAd.adBodyHex
+                                    nativeAdConfig.adBodyHex
                                 )
                             )
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_call_to_action).typeface =
-                                UaNativeAd.font
+                                nativeAdConfig.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface =
-                                UaNativeAd.font
+                                nativeAdConfig.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline).typeface =
-                                UaNativeAd.font
+                                nativeAdConfig.font
                             //set text color
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body)
-                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
+                                .setTextColor(Color.parseColor(nativeAdConfig.textColorHex))
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_headline)
-                                .setTextColor(Color.parseColor(UaNativeAd.textColorHex))
+                                .setTextColor(Color.parseColor(nativeAdConfig.textColorHex))
                             //set btn color
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action).backgroundTintList =
-                                ColorStateList.valueOf(Color.parseColor(UaNativeAd.btnHex))
+                                ColorStateList.valueOf(Color.parseColor(nativeAdConfig.btnHex))
                             unifiedNativeAdView.findViewById<Button>(R.id.ad_call_to_action)
-                                .setTextColor(Color.parseColor(UaNativeAd.btnTextHex))
+                                .setTextColor(Color.parseColor(nativeAdConfig.btnTextHex))
                             mapUnifiedNativeAdToLayout(nativeAd, unifiedNativeAdView)
                             frameLayout.removeAllViews()
                             frameLayout.addView(unifiedNativeAdView)

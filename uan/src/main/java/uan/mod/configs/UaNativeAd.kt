@@ -3,7 +3,7 @@ package uan.mod.configs
 import android.graphics.Typeface
 import android.util.Log
 
-object UaNativeAd {
+class UaNativeAd {
     var font: Typeface? = null
     var textColorHex: String? = null
     var adBodyHex: String? = null
