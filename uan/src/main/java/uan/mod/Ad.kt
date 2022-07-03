@@ -178,10 +178,11 @@ class Ad(activity: Application) {
             return
         }
         var rewarded = false
-        if (rewardedAd != null && userIsOnline(activity)) {
+        if (rewardedAd != null) {
             val rewAd = rewardedAd?.await()
             if (rewAd == null) {
-                action.invoke(!false)
+                action.invoke(true)
+                loadAdmobReward()
                 return
             }
             rewAd.fullScreenContentCallback = object : FullScreenContentCallback() {
@@ -194,6 +195,7 @@ class Ad(activity: Application) {
                 override fun onAdFailedToShowFullScreenContent(p0: AdError?) {
                     super.onAdFailedToShowFullScreenContent(p0)
                     action.invoke(rewarded)
+                    loadAdmobReward()
                 }
             }
             GlobalScope.launch(Dispatchers.Main) {
@@ -225,6 +227,7 @@ class Ad(activity: Application) {
                     override fun onAdFailedToLoad(p0: LoadAdError) {
                         super.onAdFailedToLoad(p0)
                         rewardedAd = null
+                        Log.e("UAN", "Admob reward ad failed to load:${p0.message}")
                     }
                 })
         }
@@ -479,7 +482,11 @@ class Ad(activity: Application) {
                                     R.layout.ad_layoujt,
                                     null
                                 ) as CardView
-                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(nativeAdConfig.adBodyHex))
+                            unifiedNativeAdView.setCardBackgroundColor(
+                                Color.parseColor(
+                                    nativeAdConfig.adBodyHex
+                                )
+                            )
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_call_to_action).typeface =
                                 nativeAdConfig.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface =
@@ -536,7 +543,11 @@ class Ad(activity: Application) {
                                     R.layout.ad_layout_small,
                                     null
                                 ) as CardView
-                            unifiedNativeAdView.setCardBackgroundColor(Color.parseColor(nativeAdConfig.adBodyHex))
+                            unifiedNativeAdView.setCardBackgroundColor(
+                                Color.parseColor(
+                                    nativeAdConfig.adBodyHex
+                                )
+                            )
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_call_to_action).typeface =
                                 nativeAdConfig.font
                             unifiedNativeAdView.findViewById<TextView>(R.id.ad_body).typeface =
