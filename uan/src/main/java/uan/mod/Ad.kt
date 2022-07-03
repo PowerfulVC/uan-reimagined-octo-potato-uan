@@ -208,10 +208,12 @@ class Ad(activity: Application) {
         }
     }
 
-    private fun loadAdmobReward() {
+    fun loadAdmobReward() {
         if (adUnit == null || premiumUser) {
             return
         }
+        if (adUnit?.admob == false)
+            return
         rewardedAd = CompletableDeferred()
         GlobalScope.launch(Dispatchers.Main) {
             RewardedInterstitialAd.load(
