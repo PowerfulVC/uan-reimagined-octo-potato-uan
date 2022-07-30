@@ -8,7 +8,6 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.Typeface
 import android.net.ConnectivityManager
 import android.util.DisplayMetrics
 import android.util.Log
@@ -30,10 +29,8 @@ import com.google.android.gms.ads.nativead.NativeAdView
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
 import com.google.gson.Gson
-import com.unity3d.ads.IUnityAdsLoadListener
-import com.unity3d.ads.IUnityAdsShowListener
-import com.unity3d.ads.UnityAds
-import com.unity3d.ads.UnityAdsShowOptions
+import com.unity3d.ads.*
+import com.unity3d.ads.UnityAds.UnityAdsInitializationError
 import com.unity3d.services.banners.BannerView
 import com.unity3d.services.banners.UnityBannerSize
 import kotlinx.coroutines.*
@@ -46,7 +43,7 @@ import javax.security.auth.callback.Callback
 import kotlin.math.roundToInt
 
 
-class Ad(activity: Application) {
+class Ad(activity: Application) : IUnityAdsInitializationListener {
     private val act = activity
     var adUnit: AdUnit? = null
     var nativeAdConfig: UaNativeAd = UaNativeAd()
@@ -56,6 +53,7 @@ class Ad(activity: Application) {
     private var adView: AdView? = null
     private var rewardedAd: CompletableDeferred<RewardedInterstitialAd>? = CompletableDeferred()
     private var premiumUser = false
+    private var loadsOnFail = 0
 
     fun initialize(
         projectId: String,
@@ -111,10 +109,17 @@ class Ad(activity: Application) {
                     e.printStackTrace()
                 }
             } else {
-                UnityAds.initialize(act, adUnit!!.app, false, true)
+                UnityAds.initialize(act, adUnit!!.app, false, this)
             }
         }
     }
+
+
+    override fun onInitializationComplete() {
+        loadAd()
+    }
+
+    override fun onInitializationFailed(error: UnityAdsInitializationError?, message: String?) {}
 
     private fun loadAd() {
         if (adUnit == null || premiumUser) return
@@ -130,15 +135,20 @@ class Ad(activity: Application) {
             return
         }
         UnityAds.load(adUnit!!.interstitial, object : IUnityAdsLoadListener {
-            override fun onUnityAdsAdLoaded(placementId: String?) {}
+            override fun onUnityAdsAdLoaded(placementId: String?) {
+                loadsOnFail = 0
+            }
 
             override fun onUnityAdsFailedToLoad(
                 placementId: String?,
                 error: UnityAds.UnityAdsLoadError?,
                 message: String?
             ) {
+                if (loadsOnFail > 3)
+                    return
                 CoroutineScope(Dispatchers.IO).launch {
                     delay(3000)
+                    loadsOnFail += 1
                     loadUnityAdInter()
                 }
             }
@@ -155,15 +165,20 @@ class Ad(activity: Application) {
                         object : InterstitialAdLoadCallback() {
                             override fun onAdFailedToLoad(adError: LoadAdError) {
                                 mInterstitialAd = null
+                                if (loadsOnFail > 3)
+                                    return
                                 CoroutineScope(Dispatchers.IO).launch {
                                     delay(3000)
-                                    if (mInterstitialAd == null)
+                                    if (mInterstitialAd == null) {
+                                        loadsOnFail += 1
                                         loadAdmobInter()
+                                    }
                                 }
                             }
 
                             override fun onAdLoaded(interstitialAd: InterstitialAd) {
                                 mInterstitialAd = interstitialAd
+                                loadsOnFail = 0
                             }
                         })
         }
@@ -192,7 +207,7 @@ class Ad(activity: Application) {
                     loadAdmobReward()
                 }
 
-                override fun onAdFailedToShowFullScreenContent(p0: AdError?) {
+                override fun onAdFailedToShowFullScreenContent(p0: AdError) {
                     super.onAdFailedToShowFullScreenContent(p0)
                     action.invoke(rewarded)
                     loadAdmobReward()
@@ -204,6 +219,7 @@ class Ad(activity: Application) {
                 }
             }
         } else {
+            loadAdmobReward()
             action.invoke(false)
         }
     }
@@ -334,8 +350,8 @@ class Ad(activity: Application) {
                         onAdClosed.invoke()
                     }
 
-                    override fun onAdFailedToShowFullScreenContent(adError: AdError?) {
-                        Log.d(ContentValues.TAG, "Ad failed to show.")
+                    override fun onAdFailedToShowFullScreenContent(p0: AdError) {
+                        super.onAdFailedToShowFullScreenContent(p0)
                         onAdClosed.invoke()
                     }
 
@@ -417,7 +433,7 @@ class Ad(activity: Application) {
         val adRequest = AdRequest.Builder()
             .build()
         val adSize: AdSize = getAdSize(activity)
-        adView?.adSize = adSize
+        adView?.setAdSize(adSize)
         adView?.loadAd(adRequest)
     }
 
