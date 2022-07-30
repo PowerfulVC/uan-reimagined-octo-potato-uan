@@ -43,7 +43,7 @@ import javax.security.auth.callback.Callback
 import kotlin.math.roundToInt
 
 
-class Ad(activity: Application) : IUnityAdsInitializationListener {
+class Ad(activity: Application) {
     private val act = activity
     var adUnit: AdUnit? = null
     var nativeAdConfig: UaNativeAd = UaNativeAd()
@@ -109,17 +109,22 @@ class Ad(activity: Application) : IUnityAdsInitializationListener {
                     e.printStackTrace()
                 }
             } else {
-                UnityAds.initialize(act, adUnit!!.app, false, this)
+                UnityAds.initialize(act, adUnit!!.app, false, object :IUnityAdsInitializationListener{
+                    override fun onInitializationComplete() {
+                        loadAd()
+                    }
+
+                    override fun onInitializationFailed(
+                        error: UnityAdsInitializationError?,
+                        message: String?
+                    ) {
+                    }
+
+                })
             }
         }
     }
 
-
-    override fun onInitializationComplete() {
-        loadAd()
-    }
-
-    override fun onInitializationFailed(error: UnityAdsInitializationError?, message: String?) {}
 
     private fun loadAd() {
         if (adUnit == null || premiumUser) return
