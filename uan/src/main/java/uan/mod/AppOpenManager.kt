@@ -79,15 +79,15 @@ class AppOpenManager(private val app: Application, private val unit: String) :
                         fetchAd()
                     }
 
-                    override fun onAdFailedToShowFullScreenContent(p0: AdError?) {
+                    override fun onAdFailedToShowFullScreenContent(p0: AdError) {
+                        super.onAdFailedToShowFullScreenContent(p0)
                     }
-
                     override fun onAdShowedFullScreenContent() {
                         isShowingAd = true
                     }
                 }
             appOpenAd?.fullScreenContentCallback = fullScreenContentCallback
-            appOpenAd!!.show(currentActivity)
+            currentActivity?.let { appOpenAd!!.show(it) }
         } else {
             Log.d("tag", "can't show ad ")
             fetchAd()
