@@ -46,6 +46,7 @@ import kotlin.math.roundToInt
 class Ad(activity: Application) {
     private val act = activity
     var adUnit: AdUnit? = null
+    var defaultAdUnit: AdUnit? = null
     var nativeAdConfig: UaNativeAd = UaNativeAd()
     private var initInProgress = false
     private var lastUsedProjectId = ""
@@ -54,6 +55,15 @@ class Ad(activity: Application) {
     private var rewardedAd: CompletableDeferred<RewardedInterstitialAd>? = CompletableDeferred()
     private var premiumUser = false
     private var loadsOnFail = 0
+
+    fun setupDefaultAdUnits(strJson: String) {
+        try {
+            defaultAdUnit = Gson().fromJson(strJson, AdUnit::class.java)
+            Log.e("UAN", "Default ad units was used")
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+    }
 
     fun initialize(
         projectId: String,
@@ -71,7 +81,12 @@ class Ad(activity: Application) {
             override fun onFailure(call: okhttp3.Call, e: java.io.IOException) {
                 e.printStackTrace()
                 initInProgress = false
-                action.invoke(false)
+                if (defaultAdUnit != null) {
+                    adUnit = defaultAdUnit
+                    action.invoke(true)
+                }else{
+                    action.invoke(false)
+                }
             }
 
             override fun onResponse(call: okhttp3.Call, response: Response) {
@@ -81,7 +96,12 @@ class Ad(activity: Application) {
                     initializedAd()
                     action.invoke(true)
                 } else {
-                    action.invoke(false)
+                    if (defaultAdUnit != null) {
+                        adUnit = defaultAdUnit
+                        action.invoke(true)
+                    }else{
+                        action.invoke(false)
+                    }
                 }
             }
         })
@@ -109,18 +129,22 @@ class Ad(activity: Application) {
                     e.printStackTrace()
                 }
             } else {
-                UnityAds.initialize(act, adUnit!!.app, false, object :IUnityAdsInitializationListener{
-                    override fun onInitializationComplete() {
-                        loadAd()
-                    }
+                UnityAds.initialize(
+                    act,
+                    adUnit!!.app,
+                    false,
+                    object : IUnityAdsInitializationListener {
+                        override fun onInitializationComplete() {
+                            loadAd()
+                        }
 
-                    override fun onInitializationFailed(
-                        error: UnityAdsInitializationError?,
-                        message: String?
-                    ) {
-                    }
+                        override fun onInitializationFailed(
+                            error: UnityAdsInitializationError?,
+                            message: String?
+                        ) {
+                        }
 
-                })
+                    })
             }
         }
     }
@@ -319,13 +343,8 @@ class Ad(activity: Application) {
 
     fun showInter(activity: Activity, onAdClosed: () -> Unit) {
         if (adUnit == null && !initInProgress) {
-            initialize(lastUsedProjectId, {
-                if (it) {
-                    showRealInter(onAdClosed, activity)
-                } else {
-                    onAdClosed.invoke()
-                }
-            }, premiumUser)
+            onAdClosed.invoke()
+            return
         } else {
             showRealInter(onAdClosed, activity)
         }
