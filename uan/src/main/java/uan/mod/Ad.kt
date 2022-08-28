@@ -426,6 +426,7 @@ class Ad(activity: Application) {
 
     fun showBanner(activity: Activity, bannerView: FrameLayout) {
         if (premiumUser) {
+            bannerView.visibility = View.GONE
             return
         }
         if (adUnit == null) return
@@ -477,6 +478,7 @@ class Ad(activity: Application) {
         frameLayout: FrameLayout
     ) {
         if (premiumUser) {
+            frameLayout.visibility = View.GONE
             return
         }
         val viewTreeObserver = frameLayout.viewTreeObserver
@@ -511,7 +513,10 @@ class Ad(activity: Application) {
     fun showNative(
         frameLayout: FrameLayout
     ) {
-        if (adUnit == null || premiumUser) return
+        if (adUnit == null || premiumUser) {
+            frameLayout.visibility = View.GONE
+            return
+        }
         if (nativeAdConfig.adBodyHex == null)
             return
         if (adUnit!!.app.isNotEmpty()) {
@@ -556,6 +561,7 @@ class Ad(activity: Application) {
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                             super.onAdFailedToLoad(loadAdError)
                             Log.d("AdInfo", "Native failed to load $loadAdError")
+                            frameLayout.visibility = View.GONE
                         }
 
                         override fun onAdClosed() {}
@@ -617,6 +623,8 @@ class Ad(activity: Application) {
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                             super.onAdFailedToLoad(loadAdError)
                             Log.d("AdInfo", "Native failed to load $loadAdError")
+                            frameLayout.visibility = View.GONE
+
                         }
 
                         override fun onAdClosed() {}
@@ -678,6 +686,7 @@ class Ad(activity: Application) {
                     .withAdListener(object : AdListener() {
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                             super.onAdFailedToLoad(loadAdError)
+                            frameLayout.visibility = View.GONE
                             Log.d("AdInfo", "Native failed to load $loadAdError")
                         }
 
