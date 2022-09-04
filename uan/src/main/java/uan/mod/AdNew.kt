@@ -2,10 +2,12 @@ package uan.mod
 
 import android.app.Activity
 import android.widget.FrameLayout
+import uan.mod.helper.AdUnitsHelper
 import uan.mod.helper.FrameAds
 
 interface AdNew {
     val frameAds : FrameAds
+    val adUnitsHelper : AdUnitsHelper
     suspend fun showSplashInter(activity: Activity, onAdClosed: () -> Unit)
     suspend fun showInter(activity: Activity, onAdClosed: () -> Unit)
     suspend fun showReward(activity: Activity, onRewardClosed: (rewarded: Boolean) -> Unit)
