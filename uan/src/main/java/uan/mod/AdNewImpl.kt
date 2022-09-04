@@ -26,7 +26,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
     private var premiumUser: Boolean = false
     private val adUnitsHelper = AdUnitsHelper(app, this)
     private val loadHelper = LoadHelper(app)
-    val frameAds = FrameAds()
+    override val frameAds = FrameAds()
     private val adScope = CoroutineScope(Dispatchers.Main + Job())
 
     private var mInter: InterstitialAd? = null
