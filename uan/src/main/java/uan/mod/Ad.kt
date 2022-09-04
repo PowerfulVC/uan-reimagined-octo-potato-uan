@@ -43,9 +43,9 @@ import javax.security.auth.callback.Callback
 import kotlin.math.roundToInt
 
 
-class Ad(activity: Application) {
-    private val act = activity
+class Ad(private val app: Application) {
     var adUnit: AdUnit? = null
+    var defaultAdUnit: AdUnit? = null
     var nativeAdConfig: UaNativeAd = UaNativeAd()
     private var initInProgress = false
     private var lastUsedProjectId = ""
@@ -54,6 +54,15 @@ class Ad(activity: Application) {
     private var rewardedAd: CompletableDeferred<RewardedInterstitialAd>? = CompletableDeferred()
     private var premiumUser = false
     private var loadsOnFail = 0
+
+    fun setupDefaultAdUnits(strJson: String) {
+        try {
+            defaultAdUnit = Gson().fromJson(strJson, AdUnit::class.java)
+            Log.e("UAN", "Default ad units was used")
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+        }
+    }
 
     fun initialize(
         projectId: String,
@@ -71,7 +80,12 @@ class Ad(activity: Application) {
             override fun onFailure(call: okhttp3.Call, e: java.io.IOException) {
                 e.printStackTrace()
                 initInProgress = false
-                action.invoke(false)
+                if (defaultAdUnit != null) {
+                    adUnit = defaultAdUnit
+                    action.invoke(true)
+                }else{
+                    action.invoke(false)
+                }
             }
 
             override fun onResponse(call: okhttp3.Call, response: Response) {
@@ -81,7 +95,12 @@ class Ad(activity: Application) {
                     initializedAd()
                     action.invoke(true)
                 } else {
-                    action.invoke(false)
+                    if (defaultAdUnit != null) {
+                        adUnit = defaultAdUnit
+                        action.invoke(true)
+                    }else{
+                        action.invoke(false)
+                    }
                 }
             }
         })
@@ -91,15 +110,15 @@ class Ad(activity: Application) {
         if (adUnit != null) {
             if (adUnit!!.admob) {
                 try {
-                    val applicationInfo: ApplicationInfo = act.packageManager.getApplicationInfo(
-                        act.packageName,
+                    val applicationInfo: ApplicationInfo = app.packageManager.getApplicationInfo(
+                        app.packageName,
                         PackageManager.GET_META_DATA
                     )
                     applicationInfo.metaData.putString(
                         "com.google.android.gms.ads.APPLICATION_ID",
                         adUnit!!.app
                     )
-                    MobileAds.initialize(act) {
+                    MobileAds.initialize(app) {
                         loadAd()
                         Log.e("UAN", "UAN Initialized Successfully")
                     }
@@ -109,18 +128,22 @@ class Ad(activity: Application) {
                     e.printStackTrace()
                 }
             } else {
-                UnityAds.initialize(act, adUnit!!.app, false, object :IUnityAdsInitializationListener{
-                    override fun onInitializationComplete() {
-                        loadAd()
-                    }
+                UnityAds.initialize(
+                    app,
+                    adUnit!!.app,
+                    false,
+                    object : IUnityAdsInitializationListener {
+                        override fun onInitializationComplete() {
+                            loadAd()
+                        }
 
-                    override fun onInitializationFailed(
-                        error: UnityAdsInitializationError?,
-                        message: String?
-                    ) {
-                    }
+                        override fun onInitializationFailed(
+                            error: UnityAdsInitializationError?,
+                            message: String?
+                        ) {
+                        }
 
-                })
+                    })
             }
         }
     }
@@ -166,7 +189,7 @@ class Ad(activity: Application) {
         GlobalScope.launch(Dispatchers.Main) {
             if (adUnit!!.app.isNotEmpty())
                 if (mInterstitialAd == null)
-                    InterstitialAd.load(act, adUnit!!.interstitial, AdRequest.Builder().build(),
+                    InterstitialAd.load(app, adUnit!!.interstitial, AdRequest.Builder().build(),
                         object : InterstitialAdLoadCallback() {
                             override fun onAdFailedToLoad(adError: LoadAdError) {
                                 mInterstitialAd = null
@@ -238,7 +261,7 @@ class Ad(activity: Application) {
         rewardedAd = CompletableDeferred()
         GlobalScope.launch(Dispatchers.Main) {
             RewardedInterstitialAd.load(
-                act,
+                app,
                 adUnit!!.rewarded,
                 AdRequest.Builder().build(),
                 object : RewardedInterstitialAdLoadCallback() {
@@ -280,7 +303,7 @@ class Ad(activity: Application) {
                 var rewarded = false
                 if (rewardedInterstitialAd == null) {
                     onLoadStart.invoke(true)
-                    RewardedInterstitialAd.load(act, adUnit!!.rewarded,
+                    RewardedInterstitialAd.load(app, adUnit!!.rewarded,
                         AdRequest.Builder().build(), object : RewardedInterstitialAdLoadCallback() {
                             override fun onAdLoaded(ad: RewardedInterstitialAd) {
                                 rewardedInterstitialAd = ad
@@ -319,13 +342,8 @@ class Ad(activity: Application) {
 
     fun showInter(activity: Activity, onAdClosed: () -> Unit) {
         if (adUnit == null && !initInProgress) {
-            initialize(lastUsedProjectId, {
-                if (it) {
-                    showRealInter(onAdClosed, activity)
-                } else {
-                    onAdClosed.invoke()
-                }
-            }, premiumUser)
+            onAdClosed.invoke()
+            return
         } else {
             showRealInter(onAdClosed, activity)
         }
@@ -407,6 +425,7 @@ class Ad(activity: Application) {
 
     fun showBanner(activity: Activity, bannerView: FrameLayout) {
         if (premiumUser) {
+            bannerView.visibility = View.GONE
             return
         }
         if (adUnit == null) return
@@ -458,6 +477,7 @@ class Ad(activity: Application) {
         frameLayout: FrameLayout
     ) {
         if (premiumUser) {
+            frameLayout.visibility = View.GONE
             return
         }
         val viewTreeObserver = frameLayout.viewTreeObserver
@@ -492,7 +512,10 @@ class Ad(activity: Application) {
     fun showNative(
         frameLayout: FrameLayout
     ) {
-        if (adUnit == null || premiumUser) return
+        if (adUnit == null || premiumUser) {
+            frameLayout.visibility = View.GONE
+            return
+        }
         if (nativeAdConfig.adBodyHex == null)
             return
         if (adUnit!!.app.isNotEmpty()) {
@@ -537,6 +560,7 @@ class Ad(activity: Application) {
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                             super.onAdFailedToLoad(loadAdError)
                             Log.d("AdInfo", "Native failed to load $loadAdError")
+                            frameLayout.visibility = View.GONE
                         }
 
                         override fun onAdClosed() {}
@@ -598,6 +622,8 @@ class Ad(activity: Application) {
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                             super.onAdFailedToLoad(loadAdError)
                             Log.d("AdInfo", "Native failed to load $loadAdError")
+                            frameLayout.visibility = View.GONE
+
                         }
 
                         override fun onAdClosed() {}
@@ -659,6 +685,7 @@ class Ad(activity: Application) {
                     .withAdListener(object : AdListener() {
                         override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                             super.onAdFailedToLoad(loadAdError)
+                            frameLayout.visibility = View.GONE
                             Log.d("AdInfo", "Native failed to load $loadAdError")
                         }
 
