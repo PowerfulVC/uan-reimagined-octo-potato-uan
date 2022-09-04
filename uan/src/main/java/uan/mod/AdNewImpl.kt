@@ -24,7 +24,7 @@ import java.lang.Exception
 
 class AdNewImpl(private val app: Application) : AdNew, OnReInit {
     private var premiumUser: Boolean = false
-    private val adUnitsHelper = AdUnitsHelper(app, this)
+    override val adUnitsHelper = AdUnitsHelper(app, this)
     private val loadHelper = LoadHelper(app)
     override val frameAds = FrameAds()
     private val adScope = CoroutineScope(Dispatchers.Main + Job())
