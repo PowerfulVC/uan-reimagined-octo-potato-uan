@@ -21,7 +21,7 @@ class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit
     fun setSynchronizedAdUnits(adUnit: AdUnit) {
         if (adUnit.app.isNotEmpty() && adUnit.interstitial.isNotEmpty()) {
             this.adUnit = adUnit
-            Log.e("Info", "AD Units Native On Request ${adUnit.native}")
+            Log.e("Info", "AD Units Native On Request ${this.adUnit?.native}")
         } else if (this.adUnit == null) {
             Log.e("UAN_ERROR", "AD Units is null.")
             Log.e("UAN_ERROR", "==================")
