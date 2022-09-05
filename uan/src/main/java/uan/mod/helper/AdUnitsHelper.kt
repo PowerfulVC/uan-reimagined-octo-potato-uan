@@ -65,6 +65,7 @@ class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit
                 onCorrect.invoke(!adUnit?.interstitial.isNullOrEmpty())
             }
             AdType.NATIVE -> {
+                Log.e("UAN", "Native ad unit ${adUnit?.native}")
                 if (adUnit?.native.isNullOrEmpty()) {
                     reloadAdUnits()
                 }
@@ -77,6 +78,7 @@ class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit
     }
 
     private fun reloadAdUnits() {
+        Log.e("UAN", "Reload ad units")
         UnitsRequest.retry {
             if (it != null) {
                 setSynchronizedAdUnits(it)
