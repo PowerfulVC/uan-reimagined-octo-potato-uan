@@ -86,6 +86,7 @@ class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit
     }
 
     fun initAd(action: (() -> Unit)?) {
+        Log.d("UAN", "UAN INITING ADS ${System.currentTimeMillis()}")
         adUnit?.let { it1 -> AdInitializer.initAds(app, it1, onReInit) }
         action?.invoke()
     }
