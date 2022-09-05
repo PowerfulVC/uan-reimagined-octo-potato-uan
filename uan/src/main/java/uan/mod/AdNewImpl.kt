@@ -220,10 +220,17 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                             when {
                                 heightDp >= 270 -> {
                                     adScope.launch {
+                                        Log.e(
+                                            "UAN",
+                                            "Showing big native ad. Preloaded :${mNativeAd != null}"
+                                        )
                                         if (mNativeAd == null) {
                                             mNativeAd = loadNativeAdRuntime().await()
                                         }
-
+                                        Log.e(
+                                            "UAN",
+                                            "Showing big native ad. Load status : ${mNativeAd != null}"
+                                        )
                                         frameAds.showNative(frameLayout, false, mNativeAd)
                                         mNativeAd = null
                                     }
@@ -245,9 +252,11 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                         }
                     })
                 } else {
+                    Log.e("UAN", "Admob is selected. disabling native ad")
                     frameLayout.visibility = GONE
                 }
             } else {
+                Log.e("UAN", "Incorrect native ad units")
                 frameLayout.visibility = GONE
             }
         }
