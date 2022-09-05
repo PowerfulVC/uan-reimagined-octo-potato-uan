@@ -57,6 +57,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
         this.premiumUser = premiumUser
         UnitsRequest.request(projectId) { adUnit ->
             if (adUnit != null) {
+                Log.d("UAN", "UAN REQUESTED AD UNITS ${System.currentTimeMillis()}")
                 adUnitsHelper.setSynchronizedAdUnits(adUnit)
             }
             adUnitsHelper.initAd(action)
@@ -78,10 +79,12 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                         delay(7000)
                         onAdClosed.invoke()
                         job.cancel()
+                        Log.d("UAN", "JOB CANCEL TIMEOUT")
                     }
                     launch(job) {
                         loadHelper.loadInter(adUnitsHelper.getAdUnit(AdType.INTERSTITIAL)) { inter ->
                             if (inter == null) {
+                                Log.d("UAN", "SPLASH INTER IS NULL")
                                 adScope.launch {
                                     delay(3000)
                                     onAdClosed.invoke()
@@ -104,11 +107,13 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                                     inter.show(activity)
                                 }
                             }
+                            Log.d("UAN", "JOB CANCEL LOADED INTER")
                             job.cancel()
                         }
                     }
                 }
             } else {
+                Log.e("UAN", "AD UNIT INTER INCORRECT")
                 adScope.launch {
                     delay(2000)
                     onAdClosed.invoke()
