@@ -54,6 +54,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
         action: () -> Unit,
         premiumUser: Boolean
     ) {
+        Log.d("UAN", "INIT ${System.currentTimeMillis()}")
         this.premiumUser = premiumUser
         UnitsRequest.request(projectId) { adUnit ->
             if (adUnit != null) {
@@ -326,7 +327,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
             bannerView.visibility = GONE
             return
         }
-        adUnitsHelper.verifyAdUnits(AdType.NATIVE) {
+        adUnitsHelper.verifyAdUnits(AdType.BANNER) {
             if (it) {
                 if (adUnitsHelper.providerIsAdmob()) {
                     adView = AdView(activity)
