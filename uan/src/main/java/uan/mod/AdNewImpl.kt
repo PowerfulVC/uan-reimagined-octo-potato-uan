@@ -207,8 +207,8 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
             frameLayout.visibility = GONE
             return
         }
-        adUnitsHelper.verifyAdUnits(AdType.NATIVE) {
-            if (it) {
+     //   adUnitsHelper.verifyAdUnits(AdType.NATIVE) {
+       //     if (it) {
                 if (adUnitsHelper.providerIsAdmob()) {
                     val viewTreeObserver = frameLayout.viewTreeObserver
                     viewTreeObserver.addOnGlobalLayoutListener(object :
@@ -256,11 +256,11 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                     Log.e("UAN", "Admob is selected. disabling native ad")
                     frameLayout.visibility = GONE
                 }
-            } else {
-                Log.e("UAN", "Incorrect native ad units")
-                frameLayout.visibility = GONE
-            }
-        }
+//            } else {
+//                Log.e("UAN", "Incorrect native ad units")
+//                frameLayout.visibility = GONE
+//            }
+      //  }
     }
 
     override fun onAdReInit() {
