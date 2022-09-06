@@ -347,7 +347,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                     })
                 } else {
                     Log.e("UAN", "Admob is selected. disabling native ad")
-                    frameLayout.visibility = GONE
+                    showBanner(activity, frameLayout)
                 }
             } else {
                 Log.e("UAN", "Incorrect native ad units")
