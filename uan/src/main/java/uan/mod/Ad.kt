@@ -679,6 +679,7 @@ class Ad(private val app: Application) {
                             frameLayout.removeAllViews()
                             frameLayout.addView(unifiedNativeAdView)
                         } catch (e: java.lang.Exception) {
+                            frameLayout.visibility = View.GONE
                             e.printStackTrace()
                         }
                     }
@@ -696,6 +697,7 @@ class Ad(private val app: Application) {
                     .build()
                 adLoader.loadAd(AdRequest.Builder().build())
             } catch (e: java.lang.Exception) {
+                frameLayout.visibility = View.GONE
                 e.printStackTrace()
             }
         }
