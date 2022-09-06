@@ -12,6 +12,9 @@ import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
 import com.google.gson.Gson
+import com.unity3d.ads.IUnityAdsShowListener
+import com.unity3d.ads.UnityAds
+import com.unity3d.ads.UnityAdsShowOptions
 import com.unity3d.services.banners.BannerView
 import com.unity3d.services.banners.UnityBannerSize
 import kotlinx.coroutines.*
@@ -73,43 +76,74 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
         }
         adUnitsHelper.verifyAdUnits(AdType.INTERSTITIAL) {
             if (it) {
-                adScope.launch(Dispatchers.Main) {
-                    val job = Job()
-                    launch(job) {
-                        delay(7000)
-                        onAdClosed.invoke()
-                        job.cancel()
-                        Log.d("UAN", "JOB CANCEL TIMEOUT")
+                if (adUnitsHelper.providerIsAdmob()) {
+                    adScope.launch(Dispatchers.Main) {
+                        val job = Job()
+                        launch(job) {
+                            delay(7000)
+                            onAdClosed.invoke()
+                            job.cancel()
+                            Log.d("UAN", "JOB CANCEL TIMEOUT")
+                        }
+                        launch(job) {
+                            loadHelper.loadInter(adUnitsHelper.getAdUnit(AdType.INTERSTITIAL)) { inter ->
+                                if (inter == null) {
+                                    Log.d("UAN", "SPLASH INTER IS NULL")
+                                    adScope.launch {
+                                        delay(3000)
+                                        onAdClosed.invoke()
+                                    }
+                                } else {
+                                    adScope.launch {
+                                        inter.fullScreenContentCallback =
+                                            object : FullScreenContentCallback() {
+                                                override fun onAdDismissedFullScreenContent() {
+                                                    super.onAdDismissedFullScreenContent()
+                                                    inter.fullScreenContentCallback = null
+                                                    onAdClosed.invoke()
+                                                }
+
+                                                override fun onAdFailedToShowFullScreenContent(p0: AdError) {
+                                                    super.onAdFailedToShowFullScreenContent(p0)
+                                                    inter.fullScreenContentCallback = null
+                                                }
+                                            }
+                                        inter.show(activity)
+                                    }
+                                }
+                                Log.d("UAN", "JOB CANCEL LOADED INTER")
+                                job.cancel()
+                            }
+                        }
                     }
-                    launch(job) {
-                        loadHelper.loadInter(adUnitsHelper.getAdUnit(AdType.INTERSTITIAL)) { inter ->
-                            if (inter == null) {
-                                Log.d("UAN", "SPLASH INTER IS NULL")
-                                adScope.launch {
-                                    delay(3000)
+                } else {
+                    adScope.launch {
+                        delay(5000)
+                        UnityAds.show(activity,
+                            adUnitsHelper.getAdUnit(AdType.INTERSTITIAL),
+                            UnityAdsShowOptions(),
+                            object : IUnityAdsShowListener {
+                                override fun onUnityAdsShowFailure(
+                                    placementId: String?,
+                                    error: UnityAds.UnityAdsShowError?,
+                                    message: String?
+                                ) {
+                                    onAdClosed.invoke()
+                                    loadUnityInter()
+                                }
+
+                                override fun onUnityAdsShowStart(placementId: String?) {}
+                                override fun onUnityAdsShowClick(placementId: String?) {}
+                                override fun onUnityAdsShowComplete(
+                                    placementId: String?,
+                                    state: UnityAds.UnityAdsShowCompletionState?
+                                ) {
+                                    loadUnityInter()
                                     onAdClosed.invoke()
                                 }
-                            } else {
-                                adScope.launch {
-                                    inter.fullScreenContentCallback =
-                                        object : FullScreenContentCallback() {
-                                            override fun onAdDismissedFullScreenContent() {
-                                                super.onAdDismissedFullScreenContent()
-                                                inter.fullScreenContentCallback = null
-                                                onAdClosed.invoke()
-                                            }
 
-                                            override fun onAdFailedToShowFullScreenContent(p0: AdError) {
-                                                super.onAdFailedToShowFullScreenContent(p0)
-                                                inter.fullScreenContentCallback = null
-                                            }
-                                        }
-                                    inter.show(activity)
-                                }
                             }
-                            Log.d("UAN", "JOB CANCEL LOADED INTER")
-                            job.cancel()
-                        }
+                        )
                     }
                 }
             } else {
@@ -152,6 +186,32 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                         onAdClosed.invoke()
                         loadInter()
                     }
+                } else {
+                    UnityAds.show(activity,
+                        adUnitsHelper.getAdUnit(AdType.INTERSTITIAL),
+                        UnityAdsShowOptions(),
+                        object : IUnityAdsShowListener {
+                            override fun onUnityAdsShowFailure(
+                                placementId: String?,
+                                error: UnityAds.UnityAdsShowError?,
+                                message: String?
+                            ) {
+                                onAdClosed.invoke()
+                                loadUnityInter()
+                            }
+
+                            override fun onUnityAdsShowStart(placementId: String?) {}
+                            override fun onUnityAdsShowClick(placementId: String?) {}
+                            override fun onUnityAdsShowComplete(
+                                placementId: String?,
+                                state: UnityAds.UnityAdsShowCompletionState?
+                            ) {
+                                loadUnityInter()
+                                onAdClosed.invoke()
+                            }
+
+                        }
+                    )
                 }
             } else {
                 onAdClosed.invoke()
@@ -194,6 +254,32 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                     } else {
                         onRewardClosed.invoke(false)
                     }
+                } else {
+                    UnityAds.show(activity,
+                        adUnitsHelper.getAdUnit(AdType.REWARD),
+                        UnityAdsShowOptions(),
+                        object : IUnityAdsShowListener {
+                            override fun onUnityAdsShowFailure(
+                                placementId: String?,
+                                error: UnityAds.UnityAdsShowError?,
+                                message: String?
+                            ) {
+                                onRewardClosed.invoke(false)
+                                loadUnityReward()
+                            }
+
+                            override fun onUnityAdsShowStart(placementId: String?) {}
+                            override fun onUnityAdsShowClick(placementId: String?) {}
+                            override fun onUnityAdsShowComplete(
+                                placementId: String?,
+                                state: UnityAds.UnityAdsShowCompletionState?
+                            ) {
+                                loadUnityReward()
+                                onRewardClosed.invoke(state?.equals(UnityAds.UnityAdsShowCompletionState.COMPLETED) == true)
+                            }
+
+                        }
+                    )
                 }
             } else {
                 onRewardClosed.invoke(false)
@@ -271,7 +357,8 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
             loadNativeAd()
             loadRewardInter()
         } else {
-            TODO("PRELOAD ALL AD TYPES FOR UNITY")
+            loadUnityInter()
+            loadUnityReward()
         }
     }
 
@@ -280,6 +367,23 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
             loadHelper.loadInter(adUnitsHelper.getAdUnit(AdType.INTERSTITIAL)) {
                 if (mInter == null)
                     mInter = it
+            }
+        }
+    }
+
+    private fun loadUnityInter() {
+        adScope.launch(Dispatchers.Main) {
+            loadHelper.loadUnityInter(adUnitsHelper.getAdUnit(AdType.INTERSTITIAL)) {
+
+            }
+        }
+    }
+
+
+    private fun loadUnityReward() {
+        adScope.launch(Dispatchers.Main) {
+            loadHelper.loadUnityReward(adUnitsHelper.getAdUnit(AdType.REWARD)) {
+
             }
         }
     }
