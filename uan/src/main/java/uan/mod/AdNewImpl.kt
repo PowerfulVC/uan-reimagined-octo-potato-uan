@@ -232,7 +232,6 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                                             "Showing big native ad. Load status : ${mNativeAd != null}"
                                         )
                                         frameAds.showNative(frameLayout, false, mNativeAd)
-                                        delay(500)
                                         mNativeAd = null
                                         loadNativeAd()
                                     }
@@ -244,7 +243,6 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                                         }
 
                                         frameAds.showNative(frameLayout, true, mNativeAd)
-                                        delay(500)
                                         mNativeAd = null
                                         loadNativeAd()
                                     }
