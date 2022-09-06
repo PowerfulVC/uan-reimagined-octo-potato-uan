@@ -32,6 +32,5 @@ class AdViewHolder(view: View) : RecyclerView.ViewHolder(view) {
                 uan.showAdInFrame(activity, adHolder)
             }
         }
-        Ad.showNative(adHolder, nativeADUnit, nativeADConfig)
     }
 }
