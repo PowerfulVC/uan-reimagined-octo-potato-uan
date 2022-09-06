@@ -36,6 +36,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
     private var mReward: RewardedInterstitialAd? = null
     private var mNativeAd: NativeAd? = null
     private var adView: AdView? = null
+    private var globalCallback: OnReInit? = null
 
     override suspend fun setupDefaultAdUnits(strJson: String) {
         if (strJson.isNotEmpty()) {
@@ -154,6 +155,11 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                 }
             }
         }
+    }
+
+    override suspend fun setupGlobalInitListener(callback: OnReInit) {
+        this.globalCallback = callback
+        Log.d("UAN", "Global callback configured")
     }
 
     override suspend fun showInter(activity: Activity, onAdClosed: () -> Unit) {
@@ -352,6 +358,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
 
     override fun onAdReInit() {
         loadHelper.setIsAdmob(adUnitsHelper.providerIsAdmob())
+        globalCallback?.onAdReInit()
         if (adUnitsHelper.providerIsAdmob()) {
             loadInter()
             loadNativeAd()
