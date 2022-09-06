@@ -27,10 +27,6 @@ class AdViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         uan: AdNew,
         activity: Activity
     ) {
-        scope.launch {
-            withContext(Dispatchers.Main) {
-                uan.showAdInFrame(activity, adHolder)
-            }
-        }
+        Ad.showNative(adHolder, nativeADUnit, nativeADConfig)
     }
 }
