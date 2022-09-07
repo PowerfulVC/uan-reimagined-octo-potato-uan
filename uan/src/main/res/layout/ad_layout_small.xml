@@ -35,13 +35,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:paddingStart="10dp"
-                android:text=""
                 android:textColor="#000"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="@+id/ad_call_to_action"
-                app:layout_constraintStart_toEndOf="@+id/ad_media"
+                app:layout_constraintStart_toStartOf="@+id/ad_body"
                 app:layout_constraintTop_toTopOf="@+id/ad_media" />
 
             <TextView
@@ -54,20 +52,18 @@
             <TextView
                 android:id="@+id/ad_body"
                 android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:maxLines="2"
-                android:paddingStart="10dp"
-                android:text=""
                 android:textColor="#000"
                 android:textSize="12sp"
                 app:layout_constraintBottom_toBottomOf="@+id/ad_icon"
                 app:layout_constraintEnd_toEndOf="@+id/ad_call_to_action"
-                app:layout_constraintStart_toEndOf="@+id/ad_media"
+                app:layout_constraintStart_toStartOf="@+id/ad_call_to_action"
                 app:layout_constraintTop_toBottomOf="@+id/ad_headline" />
 
             <Button
                 android:id="@+id/ad_call_to_action"
-                android:layout_width="200dp"
+                android:layout_width="230dp"
                 android:layout_height="50dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="10dp"

@@ -39,6 +39,10 @@ import okhttp3.Request
 import okhttp3.Response
 import uan.mod.configs.AdUnit
 import uan.mod.configs.UaNativeAd
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 import javax.security.auth.callback.Callback
 import kotlin.math.roundToInt
 
@@ -679,6 +683,7 @@ class Ad(private val app: Application) {
                             frameLayout.removeAllViews()
                             frameLayout.addView(unifiedNativeAdView)
                         } catch (e: java.lang.Exception) {
+                            frameLayout.visibility = View.GONE
                             e.printStackTrace()
                         }
                     }
@@ -696,6 +701,7 @@ class Ad(private val app: Application) {
                     .build()
                 adLoader.loadAd(AdRequest.Builder().build())
             } catch (e: java.lang.Exception) {
+                frameLayout.visibility = View.GONE
                 e.printStackTrace()
             }
         }
