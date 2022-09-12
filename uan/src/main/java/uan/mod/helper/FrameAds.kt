@@ -23,6 +23,7 @@ import uan.mod.Ad
 import uan.mod.R
 import uan.mod.configs.UaNativeAd
 
+
 class FrameAds {
     var nativeAdConfig: UaNativeAd = UaNativeAd()
 

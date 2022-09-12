@@ -67,6 +67,7 @@ class Ad(private val app: Application) {
             e.printStackTrace()
         }
     }
+    
 
     fun initialize(
         projectId: String,
