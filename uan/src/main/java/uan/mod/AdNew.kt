@@ -5,10 +5,11 @@ import android.widget.FrameLayout
 import uan.mod.callbacks.OnReInit
 import uan.mod.helper.AdUnitsHelper
 import uan.mod.helper.FrameAds
+import uan.mod.net.UnitsRequest
 
 interface AdNew {
     val frameAds : FrameAds
-    val adUnitsHelper : AdUnitsHelper
+    val adUnitsHelper : AdUnitsHelper?
     suspend fun showSplashInter(activity: Activity, onAdClosed: () -> Unit)
     suspend fun setupGlobalInitListener(callback : OnReInit)
     suspend fun showInter(activity: Activity, onAdClosed: () -> Unit)
@@ -21,4 +22,6 @@ interface AdNew {
         action: () -> Unit,
         premiumUser: Boolean = false
     )
+
+    var unitsRequest: UnitsRequest?
 }

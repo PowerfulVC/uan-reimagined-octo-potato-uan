@@ -7,7 +7,7 @@ import uan.mod.configs.AdUnit
 import uan.mod.models.AdType
 import uan.mod.net.UnitsRequest
 
-class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit) {
+class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit, private val unitsRequest: UnitsRequest) {
     private var adUnit: AdUnit? = null
 
     fun setDefaultAdUnits(adUnit: AdUnit) {
@@ -77,7 +77,7 @@ class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit
     }
 
     private fun reloadAdUnits() {
-        UnitsRequest.retry {
+        unitsRequest.retry {
             if (it != null) {
                 setSynchronizedAdUnits(it)
                 initAd(null)
