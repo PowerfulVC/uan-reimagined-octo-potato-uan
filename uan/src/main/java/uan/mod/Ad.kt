@@ -42,7 +42,7 @@ import uan.mod.configs.UaNativeAd
 import javax.security.auth.callback.Callback
 import kotlin.math.roundToInt
 
-
+ 
 class Ad(activity: Application) {
     private val act = activity
     var adUnit: AdUnit? = null
