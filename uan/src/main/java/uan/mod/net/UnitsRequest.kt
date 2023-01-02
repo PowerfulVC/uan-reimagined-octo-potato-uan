@@ -12,7 +12,6 @@ class UnitsRequest {
     private var retries = 0
     private var url: String = ""
 
-
     fun setupUnitsUrl(unitsUrl: String) {
         this.url = unitsUrl
     }

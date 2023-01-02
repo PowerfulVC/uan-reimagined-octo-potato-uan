@@ -14,7 +14,7 @@ object SizeUtils {
         return (px / (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
     }
 
-    fun getAdSize(activity: Activity): AdSize {
+    internal fun getAdSize(activity: Activity): AdSize {
         val display: Display = activity.windowManager.defaultDisplay
         val outMetrics = DisplayMetrics()
         display.getMetrics(outMetrics)

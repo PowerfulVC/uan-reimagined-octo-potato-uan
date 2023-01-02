@@ -16,12 +16,13 @@ class UaNativeAd {
         adBodyHex: String,
         btnHex: String,
         btnTextHex: String
-    ) {
+    ): UaNativeAd {
         this.font = font
         this.textColorHex = textColorHex
         this.adBodyHex = adBodyHex
         this.btnHex = btnHex
         this.btnTextHex = btnTextHex
         Log.d("UAN", "Native ad configured")
+        return this
     }
 }

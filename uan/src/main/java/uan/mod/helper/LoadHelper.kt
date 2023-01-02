@@ -15,7 +15,7 @@ import com.unity3d.ads.IUnityAdsLoadListener
 import com.unity3d.ads.UnityAds
 import kotlinx.coroutines.*
 
-class LoadHelper(private val app: Application) {
+internal class LoadHelper(private val app: Application) {
     private var isAdmob: Boolean = true
     private var interReloadAttempts = 0
     private var rewardReloadAttempts = 0

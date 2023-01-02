@@ -20,13 +20,15 @@ import com.unity3d.services.banners.UnityBannerSize
 import kotlinx.coroutines.*
 import uan.mod.callbacks.OnReInit
 import uan.mod.configs.AdUnit
+import uan.mod.configs.NativeAdKeys
 import uan.mod.helper.*
 import uan.mod.models.AdType
 import uan.mod.net.UnitsRequest
+import uan.mod.use.AppOpenManager
 import java.lang.Exception
 
 
-class AdNewImpl(private val app: Application) : AdNew, OnReInit {
+class AdImpl(private val app: Application) : Ad, OnReInit {
     private var premiumUser: Boolean = false
     override var adUnitsHelper: AdUnitsHelper? = null
     override var unitsRequest: UnitsRequest? = null
@@ -38,7 +40,11 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
     private var mReward: RewardedInterstitialAd? = null
     private var mNativeAd: NativeAd? = null
     private var adView: AdView? = null
-    private var globalCallback: OnReInit? = null
+    private var globalCallback: OnReInit = object : OnReInit {
+        override fun onAdReInit() {
+            setupOpenAds(app)
+        }
+    }
 
 
     init {
@@ -62,9 +68,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
 
 
     override suspend fun init(
-        projectId: String,
-        action: () -> Unit,
-        premiumUser: Boolean
+        projectId: String, action: () -> Unit, premiumUser: Boolean
     ) {
         this.premiumUser = premiumUser
         unitsRequest?.setupUnitsUrl(projectId)
@@ -78,6 +82,12 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
 
     }
 
+    override fun setupOpenAds(application: Application) {
+        if (!this.premiumUser) {
+            if (adUnitsHelper != null) AppOpenManager(application, adUnitsHelper!!)
+        }
+    }
+
     override suspend fun showSplashInter(activity: Activity, onAdClosed: () -> Unit) {
         if (premiumUser) {
             delay(2000)
@@ -88,16 +98,17 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
             if (it) {
                 if (adUnitsHelper?.providerIsAdmob() == true) {
                     adScope.launch(Dispatchers.Main) {
-                        val job = Job()
-                        launch(job) {
+                        val scopeTimeout = CoroutineScope(Dispatchers.Main + SupervisorJob())
+                        scopeTimeout.launch {
                             delay(7000)
                             onAdClosed.invoke()
-                            job.cancel()
+                            scopeTimeout.cancel()
                             Log.d("UAN", "JOB CANCEL TIMEOUT")
                         }
-                        launch(job) {
-                            loadHelper.loadInter(adUnitsHelper?.getAdUnit(AdType.INTERSTITIAL)
-                                .toString()) { inter ->
+                        scopeTimeout.launch {
+                            loadHelper.loadInter(
+                                adUnitsHelper?.getAdUnit(AdType.INTERSTITIAL).toString()
+                            ) { inter ->
                                 if (inter == null) {
                                     Log.d("UAN", "SPLASH INTER IS NULL")
                                     adScope.launch {
@@ -123,8 +134,9 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                                     }
                                 }
                                 Log.d("UAN", "JOB CANCEL LOADED INTER")
-                                job.cancel()
+                                scopeTimeout.cancel()
                             }
+
                         }
                     }
                 } else {
@@ -153,8 +165,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                                     onAdClosed.invoke()
                                 }
 
-                            }
-                        )
+                            })
                     }
                 }
             } else {
@@ -165,11 +176,6 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                 }
             }
         }
-    }
-
-    override suspend fun setupGlobalInitListener(callback: OnReInit) {
-        this.globalCallback = callback
-        Log.d("UAN", "Global callback configured")
     }
 
     override suspend fun showInter(activity: Activity, onAdClosed: () -> Unit) {
@@ -219,15 +225,13 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                             override fun onUnityAdsShowStart(placementId: String?) {}
                             override fun onUnityAdsShowClick(placementId: String?) {}
                             override fun onUnityAdsShowComplete(
-                                placementId: String?,
-                                state: UnityAds.UnityAdsShowCompletionState?
+                                placementId: String?, state: UnityAds.UnityAdsShowCompletionState?
                             ) {
                                 loadUnityInter()
                                 onAdClosed.invoke()
                             }
 
-                        }
-                    )
+                        })
                 }
             } else {
                 onAdClosed.invoke()
@@ -236,8 +240,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
     }
 
     override suspend fun showReward(
-        activity: Activity,
-        onRewardClosed: (rewarded: Boolean) -> Unit
+        activity: Activity, onRewardClosed: (rewarded: Boolean) -> Unit
     ) {
         if (premiumUser) {
             onRewardClosed.invoke(true)
@@ -251,16 +254,16 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                         mReward?.fullScreenContentCallback = object : FullScreenContentCallback() {
                             override fun onAdDismissedFullScreenContent() {
                                 super.onAdDismissedFullScreenContent()
-                                mReward = null
                                 mReward?.fullScreenContentCallback = null
+                                mReward = null
                                 onRewardClosed.invoke(rewarded)
                                 loadRewardInter()
                             }
 
                             override fun onAdFailedToShowFullScreenContent(p0: AdError) {
                                 super.onAdFailedToShowFullScreenContent(p0)
-                                mReward = null
                                 mReward?.fullScreenContentCallback = null
+                                mReward = null
                                 loadRewardInter()
                             }
                         }
@@ -287,15 +290,13 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                             override fun onUnityAdsShowStart(placementId: String?) {}
                             override fun onUnityAdsShowClick(placementId: String?) {}
                             override fun onUnityAdsShowComplete(
-                                placementId: String?,
-                                state: UnityAds.UnityAdsShowCompletionState?
+                                placementId: String?, state: UnityAds.UnityAdsShowCompletionState?
                             ) {
                                 loadUnityReward()
                                 onRewardClosed.invoke(state?.equals(UnityAds.UnityAdsShowCompletionState.COMPLETED) == true)
                             }
 
-                        }
-                    )
+                        })
                 }
             } else {
                 onRewardClosed.invoke(false)
@@ -303,11 +304,19 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
         }
     }
 
-    override suspend fun showAdInFrame(activity: Activity, frameLayout: FrameLayout) {
+    override fun showAdInFrame(
+        activity: Activity,
+        frameLayout: FrameLayout,
+        style: NativeAdKeys?
+    ) {
         if (premiumUser) {
             frameLayout.visibility = GONE
             return
         }
+
+        val styleSmall = style ?: NativeAdKeys.SMALL_ONE
+        val styleBig = style ?: NativeAdKeys.BIG_ONE
+
         adUnitsHelper?.verifyAdUnits(AdType.NATIVE) {
             if (it) {
                 if (adUnitsHelper?.providerIsAdmob() == true) {
@@ -333,22 +342,28 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                                             "UAN",
                                             "Showing big native ad. Load status : ${mNativeAd != null}"
                                         )
-                                        frameAds.showNative(frameLayout, false, mNativeAd)
+                                        frameAds.showNativeAd(
+                                            frameLayout,
+                                            styleBig,
+                                            mNativeAd
+                                        )
                                         mNativeAd = null
                                         loadNativeAd()
                                     }
                                 }
+
                                 heightDp >= 150 -> {
                                     adScope.launch {
                                         if (mNativeAd == null) {
                                             mNativeAd = loadNativeAdRuntime().await()
                                         }
 
-                                        frameAds.showNative(frameLayout, true, mNativeAd)
+                                        frameAds.showNativeAd(frameLayout, styleSmall, mNativeAd)
                                         mNativeAd = null
                                         loadNativeAd()
                                     }
                                 }
+
                                 height >= 50 -> {
                                     showBanner(activity, frameLayout)
                                 }
@@ -368,7 +383,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
 
     override fun onAdReInit() {
         loadHelper.setIsAdmob(adUnitsHelper?.providerIsAdmob() == true)
-        globalCallback?.onAdReInit()
+        globalCallback.onAdReInit()
         if (adUnitsHelper?.providerIsAdmob() == true) {
             loadInter()
             loadNativeAd()
@@ -382,8 +397,8 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
     private fun loadInter() {
         adScope.launch(Dispatchers.Main) {
             loadHelper.loadInter(adUnitsHelper?.getAdUnit(AdType.INTERSTITIAL).toString()) {
-                if (mInter == null)
-                    mInter = it
+                Log.d("Info", "First inter loaded")
+                if (mInter == null) mInter = it
             }
         }
     }
@@ -408,16 +423,14 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
     private fun loadRewardInter() {
         adScope.launch(Dispatchers.Main) {
             loadHelper.loadReward(adUnitsHelper?.getAdUnit(AdType.REWARD).toString()) {
-                if (mReward == null)
-                    mReward = it
+                if (mReward == null) mReward = it
             }
         }
     }
 
     private fun loadNativeAd() {
         loadHelper.loadNativeAd(adUnitsHelper?.getAdUnit(AdType.NATIVE).toString()) {
-            if (mNativeAd == null)
-                mNativeAd = it
+            if (mNativeAd == null) mNativeAd = it
         }
     }
 
@@ -428,17 +441,15 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
 
     private fun loadNativeAdRuntime(): CompletableDeferred<NativeAd?> {
         val runtimeLoad = CompletableDeferred<NativeAd?>()
-        val native = AdLoader.Builder(app, adUnitsHelper?.getAdUnit(AdType.NATIVE).toString())
-            .forNativeAd {
+        val native =
+            AdLoader.Builder(app, adUnitsHelper?.getAdUnit(AdType.NATIVE).toString()).forNativeAd {
                 runtimeLoad.complete(it)
-            }
-            .withAdListener(object : AdListener() {
+            }.withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(p0: LoadAdError) {
                     super.onAdFailedToLoad(p0)
                     runtimeLoad.complete(null)
                 }
-            })
-            .build()
+            }).build()
 
         native.loadAd(AdRequest.Builder().build())
         return runtimeLoad
@@ -463,12 +474,9 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
                         bannerView.visibility = GONE
                     }
                 } else {
-                    val bottomBanner =
-                        BannerView(
-                            activity,
-                            adUnitsHelper?.getAdUnit(AdType.BANNER),
-                            UnityBannerSize(320, 50)
-                        )
+                    val bottomBanner = BannerView(
+                        activity, adUnitsHelper?.getAdUnit(AdType.BANNER), UnityBannerSize(320, 50)
+                    )
                     bottomBanner.listener = null
                     bottomBanner.load()
                     bannerView.addView(bottomBanner)
@@ -485,8 +493,7 @@ class AdNewImpl(private val app: Application) : AdNew, OnReInit {
         if (premiumUser) {
             return
         }
-        val adRequest = AdRequest.Builder()
-            .build()
+        val adRequest = AdRequest.Builder().build()
         val adSize: AdSize = SizeUtils.getAdSize(activity)
         adView?.setAdSize(adSize)
         adView?.loadAd(adRequest)

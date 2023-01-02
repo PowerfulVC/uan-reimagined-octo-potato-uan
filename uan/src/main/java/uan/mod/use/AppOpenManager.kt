@@ -12,8 +12,13 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
+import uan.mod.helper.AdUnitsHelper
+import uan.mod.models.AdType
 
-class AppOpenManager(private val app: Application, private val unit: String) :
+internal class AppOpenManager(
+    private val app: Application, private
+    val unit: AdUnitsHelper
+) :
     Application.ActivityLifecycleCallbacks,
     LifecycleObserver {
 
@@ -25,7 +30,7 @@ class AppOpenManager(private val app: Application, private val unit: String) :
     private val adRequest: AdRequest
         get() = AdRequest.Builder().build()
 
-    val isAdAvailable: Boolean
+    private val isAdAvailable: Boolean
         get() = appOpenAd != null
 
     init {
@@ -50,7 +55,7 @@ class AppOpenManager(private val app: Application, private val unit: String) :
         val request = adRequest
         AppOpenAd.load(
             app,
-            unit, request,
+            unit.getAdUnit(AdType.OPEN), request,
             AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT, loadCallback!!
         )
     }
@@ -74,6 +79,7 @@ class AppOpenManager(private val app: Application, private val unit: String) :
                     override fun onAdFailedToShowFullScreenContent(p0: AdError) {
                         super.onAdFailedToShowFullScreenContent(p0)
                     }
+
                     override fun onAdShowedFullScreenContent() {
                         isShowingAd = true
                     }

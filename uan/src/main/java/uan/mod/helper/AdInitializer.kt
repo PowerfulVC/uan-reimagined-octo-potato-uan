@@ -10,7 +10,7 @@ import com.unity3d.ads.UnityAds
 import uan.mod.callbacks.OnReInit
 import uan.mod.configs.AdUnit
 
-object AdInitializer {
+internal object AdInitializer {
     fun initAds(app: Application, adUnit: AdUnit, onReInit: OnReInit) {
         if (adUnit.admob) {
             try {
