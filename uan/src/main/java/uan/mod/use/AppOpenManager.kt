@@ -1,9 +1,8 @@
-package uan.mod
+package uan.mod.use
 
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -35,7 +34,6 @@ class AppOpenManager(private val app: Application, private val unit: String) :
     }
 
     fun fetchAd() {
-        Log.e("Info", "OpenLoadStart")
         if (isAdAvailable) {
             return
         }
@@ -43,14 +41,10 @@ class AppOpenManager(private val app: Application, private val unit: String) :
             override fun onAdLoaded(p0: AppOpenAd) {
                 super.onAdLoaded(p0)
                 appOpenAd = p0
-
-                Log.e("Info", "OnOpenAdLoaded")
             }
 
             override fun onAdFailedToLoad(p0: LoadAdError) {
                 super.onAdFailedToLoad(p0)
-                Log.e("Info", "OpenFailedtoLoad:" + p0.responseInfo)
-
             }
         }
         val request = adRequest
@@ -68,9 +62,7 @@ class AppOpenManager(private val app: Application, private val unit: String) :
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        Log.e("UAN", "SHOWOPEN:" + (!isShowingAd) + "|" + isAdAvailable)
         if (isAdAvailable) {
-            Log.d("tag", "will show ad ")
             val fullScreenContentCallback: FullScreenContentCallback =
                 object : FullScreenContentCallback() {
                     override fun onAdDismissedFullScreenContent() {
@@ -89,7 +81,6 @@ class AppOpenManager(private val app: Application, private val unit: String) :
             appOpenAd?.fullScreenContentCallback = fullScreenContentCallback
             currentActivity?.let { appOpenAd!!.show(it) }
         } else {
-            Log.d("tag", "can't show ad ")
             fetchAd()
         }
     }
@@ -125,7 +116,6 @@ class AppOpenManager(private val app: Application, private val unit: String) :
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onStart() {
         showAdIfAvailable()
-        Log.d("UAN", "onStart::::")
     }
 
 }
