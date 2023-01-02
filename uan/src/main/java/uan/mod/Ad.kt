@@ -39,12 +39,15 @@ import okhttp3.Request
 import okhttp3.Response
 import uan.mod.configs.AdUnit
 import uan.mod.configs.UaNativeAd
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 import javax.security.auth.callback.Callback
 import kotlin.math.roundToInt
 
- 
-class Ad(activity: Application) {
-    private val act = activity
+
+class Ad(private val app: Application) {
     var adUnit: AdUnit? = null
     var defaultAdUnit: AdUnit? = null
     var nativeAdConfig: UaNativeAd = UaNativeAd()
@@ -64,6 +67,7 @@ class Ad(activity: Application) {
             e.printStackTrace()
         }
     }
+    
 
     fun initialize(
         projectId: String,
@@ -111,15 +115,15 @@ class Ad(activity: Application) {
         if (adUnit != null) {
             if (adUnit!!.admob) {
                 try {
-                    val applicationInfo: ApplicationInfo = act.packageManager.getApplicationInfo(
-                        act.packageName,
+                    val applicationInfo: ApplicationInfo = app.packageManager.getApplicationInfo(
+                        app.packageName,
                         PackageManager.GET_META_DATA
                     )
                     applicationInfo.metaData.putString(
                         "com.google.android.gms.ads.APPLICATION_ID",
                         adUnit!!.app
                     )
-                    MobileAds.initialize(act) {
+                    MobileAds.initialize(app) {
                         loadAd()
                         Log.e("UAN", "UAN Initialized Successfully")
                     }
@@ -130,7 +134,7 @@ class Ad(activity: Application) {
                 }
             } else {
                 UnityAds.initialize(
-                    act,
+                    app,
                     adUnit!!.app,
                     false,
                     object : IUnityAdsInitializationListener {
@@ -190,7 +194,7 @@ class Ad(activity: Application) {
         GlobalScope.launch(Dispatchers.Main) {
             if (adUnit!!.app.isNotEmpty())
                 if (mInterstitialAd == null)
-                    InterstitialAd.load(act, adUnit!!.interstitial, AdRequest.Builder().build(),
+                    InterstitialAd.load(app, adUnit!!.interstitial, AdRequest.Builder().build(),
                         object : InterstitialAdLoadCallback() {
                             override fun onAdFailedToLoad(adError: LoadAdError) {
                                 mInterstitialAd = null
@@ -262,7 +266,7 @@ class Ad(activity: Application) {
         rewardedAd = CompletableDeferred()
         GlobalScope.launch(Dispatchers.Main) {
             RewardedInterstitialAd.load(
-                act,
+                app,
                 adUnit!!.rewarded,
                 AdRequest.Builder().build(),
                 object : RewardedInterstitialAdLoadCallback() {
@@ -304,7 +308,7 @@ class Ad(activity: Application) {
                 var rewarded = false
                 if (rewardedInterstitialAd == null) {
                     onLoadStart.invoke(true)
-                    RewardedInterstitialAd.load(act, adUnit!!.rewarded,
+                    RewardedInterstitialAd.load(app, adUnit!!.rewarded,
                         AdRequest.Builder().build(), object : RewardedInterstitialAdLoadCallback() {
                             override fun onAdLoaded(ad: RewardedInterstitialAd) {
                                 rewardedInterstitialAd = ad
@@ -680,6 +684,7 @@ class Ad(activity: Application) {
                             frameLayout.removeAllViews()
                             frameLayout.addView(unifiedNativeAdView)
                         } catch (e: java.lang.Exception) {
+                            frameLayout.visibility = View.GONE
                             e.printStackTrace()
                         }
                     }
@@ -697,6 +702,7 @@ class Ad(activity: Application) {
                     .build()
                 adLoader.loadAd(AdRequest.Builder().build())
             } catch (e: java.lang.Exception) {
+                frameLayout.visibility = View.GONE
                 e.printStackTrace()
             }
         }
