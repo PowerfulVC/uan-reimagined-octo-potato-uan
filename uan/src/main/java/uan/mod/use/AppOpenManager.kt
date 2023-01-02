@@ -119,6 +119,11 @@ internal class AppOpenManager(
         currentActivity = null
     }
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    fun onResume() {
+        showAdIfAvailable()
+    }
+
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onStart() {
         showAdIfAvailable()
