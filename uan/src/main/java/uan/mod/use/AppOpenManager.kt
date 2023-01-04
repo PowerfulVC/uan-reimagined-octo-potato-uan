@@ -85,7 +85,10 @@ internal class AppOpenManager(
                     }
                 }
             appOpenAd?.fullScreenContentCallback = fullScreenContentCallback
-            currentActivity?.let { appOpenAd!!.show(it) }
+            currentActivity?.let {
+                if (!isShowingAd)
+                    appOpenAd!!.show(it)
+            }
         } else {
             fetchAd()
         }
