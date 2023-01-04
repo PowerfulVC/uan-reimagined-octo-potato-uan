@@ -87,14 +87,18 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
     override fun setupOpenAds(application: Application) {
         adScope.launch(Dispatchers.Main) {
             if (!this@AdImpl.premiumUser) {
-                if (adUnitsHelper != null) appOpenManager =
-                    AppOpenManager(application, adUnitsHelper!!)
+                if (adUnitsHelper != null) {
+                    appOpenManager =
+                        AppOpenManager(application, adUnitsHelper!!)
+                    Log.d("Info", "Open ads initialization")
+                }
             }
         }
     }
 
     override fun setOpenAdsRestriction(restrictionUnit: (activity: Activity?) -> Boolean) {
         appOpenManager?.openAdsRestricted = restrictionUnit
+        Log.d("Info", "Set restrictions to open ads")
     }
 
     override suspend fun showSplashInter(activity: Activity, onAdClosed: () -> Unit) {
