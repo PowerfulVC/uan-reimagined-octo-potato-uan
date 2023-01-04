@@ -38,6 +38,10 @@ internal class AppOpenManager(
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 
+    var openAdsRestricted: (activity: Activity?) -> Boolean = {
+        false
+    }
+
     fun fetchAd() {
         if (isAdAvailable) {
             return
@@ -62,7 +66,7 @@ internal class AppOpenManager(
 
     private fun showAdIfAvailable() {
         try {
-            if ((currentActivity!!::class.java.simpleName == "SplashActivity"))
+            if ((currentActivity!!::class.java.simpleName == "SplashActivity") || openAdsRestricted(currentActivity))
                 return
         } catch (e: Exception) {
             e.printStackTrace()

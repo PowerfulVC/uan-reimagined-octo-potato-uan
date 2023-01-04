@@ -26,5 +26,7 @@ interface Ad {
 
     fun setupOpenAds(application: Application)
 
+    fun setOpenAdsRestriction(restrictionUnit: (activity: Activity?) -> Boolean)
+
     var unitsRequest: UnitsRequest?
 }

@@ -46,6 +46,8 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
         }
     }
 
+    private var appOpenManager: AppOpenManager? = null
+
 
     init {
         unitsRequest = UnitsRequest()
@@ -85,9 +87,14 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
     override fun setupOpenAds(application: Application) {
         adScope.launch(Dispatchers.Main) {
             if (!this@AdImpl.premiumUser) {
-                if (adUnitsHelper != null) AppOpenManager(application, adUnitsHelper!!)
+                if (adUnitsHelper != null) appOpenManager =
+                    AppOpenManager(application, adUnitsHelper!!)
             }
         }
+    }
+
+    override fun setOpenAdsRestriction(restrictionUnit: (activity: Activity?) -> Boolean) {
+        appOpenManager?.openAdsRestricted = restrictionUnit
     }
 
     override suspend fun showSplashInter(activity: Activity, onAdClosed: () -> Unit) {
