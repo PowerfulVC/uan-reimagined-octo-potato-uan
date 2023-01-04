@@ -83,8 +83,10 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
     }
 
     override fun setupOpenAds(application: Application) {
-        if (!this.premiumUser) {
-            if (adUnitsHelper != null) AppOpenManager(application, adUnitsHelper!!)
+        adScope.launch(Dispatchers.Main) {
+            if (!this@AdImpl.premiumUser) {
+                if (adUnitsHelper != null) AppOpenManager(application, adUnitsHelper!!)
+            }
         }
     }
 
