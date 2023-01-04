@@ -3,6 +3,7 @@ package uan.mod.use
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -39,6 +40,7 @@ internal class AppOpenManager(
     }
 
     var openAdsRestricted: (activity: Activity?) -> Boolean = {
+        Log.e("Info", "DEFAULT")
         false
     }
 
