@@ -28,10 +28,10 @@ class NativeAdBuilder {
     @IdRes
     private var iconViewId: Int = 0
 
-    private var uanNativeAd: UaNativeAd = UaNativeAd()
+    private var uanNativeAd: UaNativeAd? = null
 
 
-    fun style(uaNativeAd: UaNativeAd): NativeAdBuilder {
+    fun style(uaNativeAd: UaNativeAd?): NativeAdBuilder {
         this.uanNativeAd = uaNativeAd
         return this
     }

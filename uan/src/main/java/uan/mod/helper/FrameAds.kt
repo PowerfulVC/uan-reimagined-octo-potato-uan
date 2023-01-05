@@ -100,27 +100,47 @@ class FrameAds {
     }
 
     private fun setupStyle(view: CardView, config: NativeAdConfig) {
-        view.setCardBackgroundColor(
-            Color.parseColor(
-                config.uanNativeAd.adBodyHex
+        if (config.uanNativeAd == null) {
+            return
+        }
+        if (config.uanNativeAd?.adBodyHex != null) {
+            view.setCardBackgroundColor(
+                Color.parseColor(
+                    config.uanNativeAd!!.adBodyHex
+                )
             )
-        )
-        view.findViewById<TextView>(config.callToActionViewId).typeface =
-            config.uanNativeAd.font
-        view.findViewById<TextView>(config.bodyViewId).typeface =
-            config.uanNativeAd.font
-        view.findViewById<TextView>(config.headlineViewId).typeface =
-            config.uanNativeAd.font
+        }
 
-        view.findViewById<TextView>(config.bodyViewId)
-            .setTextColor(Color.parseColor(config.uanNativeAd.textColorHex))
-        view.findViewById<TextView>(config.headlineViewId)
-            .setTextColor(Color.parseColor(config.uanNativeAd.textColorHex))
+        val font = config.uanNativeAd?.font
 
-        view.findViewById<Button>(config.callToActionViewId)?.backgroundTintList =
-            ColorStateList.valueOf(Color.parseColor(config.uanNativeAd.btnHex))
-        view.findViewById<Button>(config.callToActionViewId)
-            ?.setTextColor(Color.parseColor(config.uanNativeAd.btnTextHex))
+        if (font != null) {
+            view.findViewById<TextView>(config.callToActionViewId).typeface =
+                font
+            view.findViewById<TextView>(config.bodyViewId).typeface =
+                font
+            view.findViewById<TextView>(config.headlineViewId).typeface =
+                font
+        }
+
+        val textColor = config.uanNativeAd?.textColorHex
+
+        if (textColor != null) {
+
+            view.findViewById<TextView>(config.bodyViewId)
+                .setTextColor(Color.parseColor(textColor))
+            view.findViewById<TextView>(config.headlineViewId)
+                .setTextColor(Color.parseColor(textColor))
+
+        }
+
+        if (config.uanNativeAd?.btnHex != null) {
+            view.findViewById<Button>(config.callToActionViewId)?.backgroundTintList =
+                ColorStateList.valueOf(Color.parseColor(config.uanNativeAd!!.btnHex))
+        }
+        if (config.uanNativeAd?.btnTextHex != null) {
+            view.findViewById<Button>(config.callToActionViewId)
+                ?.setTextColor(Color.parseColor(config.uanNativeAd!!.btnTextHex))
+        }
     }
 
 

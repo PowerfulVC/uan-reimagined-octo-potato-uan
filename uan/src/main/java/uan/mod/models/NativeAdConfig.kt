@@ -29,5 +29,5 @@ data class NativeAdConfig(
     @IdRes
     var iconViewId: Int = 0,
 
-    var uanNativeAd: UaNativeAd
+    var uanNativeAd: UaNativeAd?
 )
