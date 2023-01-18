@@ -35,6 +35,7 @@ internal class AppOpenManager(
         get() = appOpenAd != null
 
     init {
+        app.unregisterActivityLifecycleCallbacks(this)
         app.registerActivityLifecycleCallbacks(this)
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
