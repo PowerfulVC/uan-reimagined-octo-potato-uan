@@ -34,12 +34,6 @@ internal class AppOpenManager(
     private val isAdAvailable: Boolean
         get() = appOpenAd != null
 
-    init {
-        app.unregisterActivityLifecycleCallbacks(this)
-        app.registerActivityLifecycleCallbacks(this)
-        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
-    }
-
     var openAdsRestricted: (activity: Activity?) -> Boolean = {
         Log.e("Info", "DEFAULT")
         false

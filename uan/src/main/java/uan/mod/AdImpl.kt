@@ -7,6 +7,7 @@ import android.view.View
 import android.view.View.GONE
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.gms.ads.*
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.nativead.NativeAd
@@ -100,9 +101,15 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
         adScope.launch(Dispatchers.Main) {
             if (!this@AdImpl.premiumUser) {
                 if (adUnitsHelper != null) {
-                    appOpenManager =
-                        AppOpenManager(application, adUnitsHelper!!)
-                    Log.d("Info", "Open ads initialization")
+                    if (appOpenManager == null) {
+                        appOpenManager =
+                            AppOpenManager(application, adUnitsHelper!!)
+                        application.unregisterActivityLifecycleCallbacks(appOpenManager)
+                        application.registerActivityLifecycleCallbacks(appOpenManager)
+                        ProcessLifecycleOwner.get().lifecycle.removeObserver(appOpenManager!!)
+                        ProcessLifecycleOwner.get().lifecycle.addObserver(appOpenManager!!)
+                        Log.d("Info", "Open ads initialization")
+                    }
                 }
             }
         }
