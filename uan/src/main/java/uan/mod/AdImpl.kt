@@ -82,19 +82,15 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
 
     }
 
-    private fun initInternal(): CompletableDeferred<Boolean> {
+    private suspend fun initInternal(): CompletableDeferred<Boolean> {
         val completableDeferred = CompletableDeferred<Boolean>()
-        mainScope.launch {
-            unitsRequest?.request { adUnit ->
-                this.launch {
-                    if (adUnit != null) {
-                        Log.d("UAN", "UAN REQUESTED AD UNITS ${System.currentTimeMillis()}")
-                        adUnitsHelper?.setSynchronizedAdUnits(adUnit)
-                    }
-                    adUnitsHelper?.initAd {
-                        completableDeferred.complete(true)
-                    }
-                }
+        unitsRequest?.request { adUnit ->
+            if (adUnit != null) {
+                Log.d("UAN", "UAN REQUESTED AD UNITS ${System.currentTimeMillis()}")
+                adUnitsHelper?.setSynchronizedAdUnits(adUnit)
+            }
+            adUnitsHelper?.initAd {
+                completableDeferred.complete(true)
             }
         }
         return completableDeferred
