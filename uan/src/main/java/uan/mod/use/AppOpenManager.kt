@@ -68,7 +68,10 @@ internal class AppOpenManager(
 
     private fun showAdIfAvailable() {
         try {
-            if ((currentActivity!!::class.java.simpleName == "SplashActivity") || openAdsRestricted(currentActivity))
+            if ((currentActivity!!::class.java.simpleName == "SplashActivity") || openAdsRestricted(
+                    currentActivity
+                )
+            )
                 return
         } catch (e: Exception) {
             e.printStackTrace()
@@ -92,8 +95,10 @@ internal class AppOpenManager(
                 }
             appOpenAd?.fullScreenContentCallback = fullScreenContentCallback
             currentActivity?.let {
-                if (!isShowingAd)
-                    appOpenAd!!.show(it)
+                if (!isShowingAd) {
+                    Log.d("UAN-OA", "Show open ads")
+                    appOpenAd?.show(it)
+                }
             }
         } else {
             fetchAd()

@@ -3,6 +3,7 @@ package uan.mod
 import android.app.Activity
 import android.app.Application
 import android.widget.FrameLayout
+import kotlinx.coroutines.Job
 import uan.mod.callbacks.OnReInit
 import uan.mod.configs.NativeAdKeys
 import uan.mod.helper.AdUnitsHelper
@@ -22,7 +23,7 @@ interface Ad {
         projectId: String,
         action: () -> Unit,
         premiumUser: Boolean = false
-    )
+    ): Job
 
     fun setupOpenAds(application: Application)
 

@@ -35,13 +35,14 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
     private val loadHelper = LoadHelper(app)
     override val frameAds = FrameAds()
     private val adScope = CoroutineScope(Dispatchers.Main + Job())
-
+    private val mainScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var mInter: InterstitialAd? = null
     private var mReward: RewardedInterstitialAd? = null
     private var mNativeAd: NativeAd? = null
     private var adView: AdView? = null
     private var globalCallback: OnReInit = object : OnReInit {
         override fun onAdReInit() {
+            Log.d("UAN-RQ", "UAN On Ad Re Initialized")
             setupOpenAds(app)
         }
     }
@@ -71,15 +72,19 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
 
     override suspend fun init(
         projectId: String, action: () -> Unit, premiumUser: Boolean
-    ) {
-        this.premiumUser = premiumUser
-        unitsRequest?.setupUnitsUrl(projectId)
-        unitsRequest?.request { adUnit ->
-            if (adUnit != null) {
-                Log.d("UAN", "UAN REQUESTED AD UNITS ${System.currentTimeMillis()}")
-                adUnitsHelper?.setSynchronizedAdUnits(adUnit)
+    ): Job {
+        return mainScope.launch {
+            this@AdImpl.premiumUser = premiumUser
+            unitsRequest?.setupUnitsUrl(projectId)
+            unitsRequest?.request { adUnit ->
+                this.launch {
+                    if (adUnit != null) {
+                        Log.d("UAN", "UAN REQUESTED AD UNITS ${System.currentTimeMillis()}")
+                        adUnitsHelper?.setSynchronizedAdUnits(adUnit)
+                    }
+                    adUnitsHelper?.initAd(action)
+                }
             }
-            adUnitsHelper?.initAd(action)
         }
 
     }
