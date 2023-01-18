@@ -20,9 +20,7 @@ interface Ad {
     suspend fun setupDefaultAdUnits(strJson: String)
     suspend fun destroyNativeAd()
     suspend fun init(
-        projectId: String,
-        action: () -> Unit,
-        premiumUser: Boolean = false
+        projectId: String, premiumUser: Boolean = false
     ): Job
 
     fun setupOpenAds(application: Application)

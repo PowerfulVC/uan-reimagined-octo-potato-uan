@@ -71,22 +71,33 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
 
 
     override suspend fun init(
-        projectId: String, action: () -> Unit, premiumUser: Boolean
+        projectId: String, premiumUser: Boolean
     ): Job {
+        this@AdImpl.premiumUser = premiumUser
+        unitsRequest?.setupUnitsUrl(projectId)
+
         return mainScope.launch {
-            this@AdImpl.premiumUser = premiumUser
-            unitsRequest?.setupUnitsUrl(projectId)
+            initInternal().await()
+        }
+
+    }
+
+    private fun initInternal(): CompletableDeferred<Boolean> {
+        val completableDeferred = CompletableDeferred<Boolean>()
+        mainScope.launch {
             unitsRequest?.request { adUnit ->
                 this.launch {
                     if (adUnit != null) {
                         Log.d("UAN", "UAN REQUESTED AD UNITS ${System.currentTimeMillis()}")
                         adUnitsHelper?.setSynchronizedAdUnits(adUnit)
                     }
-                    adUnitsHelper?.initAd(action)
+                    adUnitsHelper?.initAd {
+                        completableDeferred.complete(true)
+                    }
                 }
             }
         }
-
+        return completableDeferred
     }
 
     override fun setupOpenAds(application: Application) {
