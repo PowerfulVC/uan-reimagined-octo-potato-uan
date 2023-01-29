@@ -6,6 +6,6 @@
     <FrameLayout
         android:id="@+id/nativeAdHolder"
         android:layout_width="match_parent"
-        android:layout_height="280dp" />
+        android:layout_height="wrap_content" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
