@@ -89,8 +89,8 @@ class NativeAdBuilder {
             this.headlineViewId,
             this.bodyViewId,
             this.callToActionViewId,
-            this.iconViewId,
             this.advertiserViewId,
+            this.iconViewId,
             this.uanNativeAd
         )
     }
