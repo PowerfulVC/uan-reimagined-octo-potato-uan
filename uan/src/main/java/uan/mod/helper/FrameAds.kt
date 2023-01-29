@@ -81,6 +81,9 @@ class FrameAds {
         myAdView.advertiserView = myAdView.findViewByIdSafe(config.advertiserViewId) as? TextView
         myAdView.iconView = myAdView.findViewByIdSafe(config.iconViewId) as? ImageView
 
+        if (config.advertiserViewId != 0)
+            mediaView?.setImageScaleType(ImageView.ScaleType.CENTER_CROP)
+
         (myAdView.headlineView as? TextView)?.text = adFromGoogle.headline
         if (adFromGoogle.body == null) {
             myAdView.bodyView?.visibility = GONE
