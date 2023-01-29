@@ -78,6 +78,7 @@ class FrameAds {
         myAdView.headlineView = myAdView.findViewByIdSafe(config.headlineViewId) as? TextView
         myAdView.bodyView = myAdView.findViewByIdSafe(config.bodyViewId) as? TextView
         myAdView.callToActionView = myAdView.findViewByIdSafe(config.callToActionViewId) as? Button
+        myAdView.advertiserView = myAdView.findViewByIdSafe(config.advertiserViewId) as? TextView
         myAdView.iconView = myAdView.findViewByIdSafe(config.iconViewId) as? ImageView
 
         (myAdView.headlineView as? TextView)?.text = adFromGoogle.headline
@@ -115,6 +116,8 @@ class FrameAds {
 
         if (font != null) {
             view.findViewById<TextView>(config.callToActionViewId).typeface =
+                font
+            view.findViewById<TextView>(config.advertiserViewId)?.typeface =
                 font
             view.findViewById<TextView>(config.bodyViewId).typeface =
                 font

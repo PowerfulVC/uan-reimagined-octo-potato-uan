@@ -27,6 +27,9 @@ data class NativeAdConfig(
     var callToActionViewId: Int = 0,
 
     @IdRes
+    var advertiserViewId: Int = 0,
+
+    @IdRes
     var iconViewId: Int = 0,
 
     var uanNativeAd: UaNativeAd?

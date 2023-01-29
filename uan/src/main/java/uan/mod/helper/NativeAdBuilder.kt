@@ -26,6 +26,9 @@ class NativeAdBuilder {
     private var callToActionViewId: Int = 0
 
     @IdRes
+    private var advertiserViewId: Int = 0
+
+    @IdRes
     private var iconViewId: Int = 0
 
     private var uanNativeAd: UaNativeAd? = null
@@ -71,6 +74,11 @@ class NativeAdBuilder {
         return this
     }
 
+    fun advertiser(@IdRes res: Int): NativeAdBuilder {
+        this.advertiserViewId = res
+        return this
+    }
+
 
     fun build(key: NativeAdKeys): NativeAdConfig {
         return NativeAdConfig(
@@ -82,6 +90,7 @@ class NativeAdBuilder {
             this.bodyViewId,
             this.callToActionViewId,
             this.iconViewId,
+            this.advertiserViewId,
             this.uanNativeAd
         )
     }
