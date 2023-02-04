@@ -46,5 +46,6 @@ dependencies {
     api 'com.google.android.gms:play-services-ads:21.1.0'
     implementation 'com.unity3d.ads:unity-ads:4.2.1'
     api 'com.android.billingclient:billing-ktx:4.1.0'
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1"
 
 }

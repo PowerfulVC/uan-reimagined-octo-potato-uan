@@ -3,6 +3,7 @@ package uan.mod
 import android.app.Activity
 import android.app.Application
 import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.Job
 import uan.mod.callbacks.OnReInit
 import uan.mod.configs.NativeAdKeys
@@ -16,7 +17,7 @@ interface Ad {
     suspend fun showSplashInter(activity: Activity, onAdClosed: () -> Unit)
     suspend fun showInter(activity: Activity, onAdClosed: () -> Unit)
     suspend fun showReward(activity: Activity, onRewardClosed: (rewarded: Boolean) -> Unit)
-    fun showAdInFrame(activity: Activity, frameLayout: FrameLayout, style: NativeAdKeys?)
+    fun showAdInFrame(activity: AppCompatActivity, frameLayout: FrameLayout, style: NativeAdKeys?)
     suspend fun setupDefaultAdUnits(strJson: String)
     suspend fun destroyNativeAd()
     suspend fun init(

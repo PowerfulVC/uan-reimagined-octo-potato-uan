@@ -7,7 +7,9 @@ import android.view.View
 import android.view.View.GONE
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.ads.*
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.nativead.NativeAd
@@ -337,7 +339,7 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
     }
 
     override fun showAdInFrame(
-        activity: Activity,
+        activity: AppCompatActivity,
         frameLayout: FrameLayout,
         style: NativeAdKeys?
     ) {
@@ -355,66 +357,79 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
             Log.d("UAN_DEBUG_NATIVE", "show ad in frame: verified = ${it}")
             if (it) {
                 if (adUnitsHelper?.providerIsAdmob() == true) {
-                    val viewTreeObserver = frameLayout.viewTreeObserver
-                    viewTreeObserver.addOnGlobalLayoutListener(object :
-                        ViewTreeObserver.OnGlobalLayoutListener {
-                        override fun onGlobalLayout() {
-                            frameLayout.viewTreeObserver.removeGlobalOnLayoutListener(this);
-                            val height = frameLayout.height
-                            val heightDp = SizeUtils.pxToDp(app, height)
-                            Log.d("UAN_DEBUG_NATIVE", "show ad in frame: on layout measured")
-                            when {
-                                heightDp >= 270 -> {
-                                    Log.d("UAN_DEBUG_NATIVE", "show ad in frame: on layout measured: big")
-                                    adScope.launch {
-                                        Log.e(
-                                            "UAN",
-                                            "Showing big native ad. Preloaded :${mNativeAd != null}"
-                                        )
-                                        if (mNativeAd == null) {
-                                            mNativeAd = loadNativeAdRuntime().await()
-                                        }
-                                        Log.e(
-                                            "UAN",
-                                            "Showing big native ad. Load status : ${mNativeAd != null}"
-                                        )
-                                        frameAds.showNativeAd(
-                                            frameLayout,
-                                            styleBig,
-                                            mNativeAd
-                                        )
-                                        mNativeAd = null
-                                        loadNativeAd()
+                    activity.lifecycleScope.launch {
+                        val height = frameLayout.getHeightDeferred().await()
+                        val heightDp = SizeUtils.pxToDp(app, height)
+                        Log.d("UAN_DEBUG_NATIVE", "show ad in frame: on layout measured")
+                        when {
+                            heightDp >= 270 -> {
+                                Log.d(
+                                    "UAN_DEBUG_NATIVE",
+                                    "show ad in frame: on layout measured: big"
+                                )
+                                adScope.launch {
+                                    Log.e(
+                                        "UAN",
+                                        "Showing big native ad. Preloaded :${mNativeAd != null}"
+                                    )
+                                    if (mNativeAd == null) {
+                                        mNativeAd = loadNativeAdRuntime().await()
                                     }
-                                }
-
-                                heightDp >= 150 -> {
-                                    adScope.launch {
-                                        if (mNativeAd == null) {
-                                            mNativeAd = loadNativeAdRuntime().await()
-                                        }
-
-                                        frameAds.showNativeAd(frameLayout, styleSmall, mNativeAd)
-                                        mNativeAd = null
-                                        loadNativeAd()
-                                    }
-                                }
-
-                                height >= 50 -> {
-                                    showBanner(activity, frameLayout)
+                                    Log.e(
+                                        "UAN",
+                                        "Showing big native ad. Load status : ${mNativeAd != null}"
+                                    )
+                                    frameAds.showNativeAd(
+                                        frameLayout,
+                                        styleBig,
+                                        mNativeAd
+                                    )
+                                    mNativeAd = null
+                                    loadNativeAd()
                                 }
                             }
+
+                            heightDp >= 150 -> {
+                                adScope.launch {
+                                    if (mNativeAd == null) {
+                                        mNativeAd = loadNativeAdRuntime().await()
+                                    }
+
+                                    frameAds.showNativeAd(frameLayout, styleSmall, mNativeAd)
+                                    mNativeAd = null
+                                    loadNativeAd()
+                                }
+                            }
+
+                            height >= 50 -> {
+                                showBanner(activity, frameLayout)
+                            }
                         }
-                    })
+                    }
                 } else {
                     Log.e("UAN", "Admob is selected. disabling native ad")
                     showBanner(activity, frameLayout)
                 }
+
             } else {
                 Log.e("UAN", "Incorrect native ad units")
                 frameLayout.visibility = GONE
             }
         }
+    }
+
+
+    fun FrameLayout.getHeightDeferred(): CompletableDeferred<Int> {
+        val completableDeferred = CompletableDeferred<Int>()
+        val viewTreeObserver = this.viewTreeObserver
+        viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                viewTreeObserver.removeOnGlobalLayoutListener(this)
+                completableDeferred.complete(this@getHeightDeferred.height)
+            }
+        })
+        return completableDeferred
     }
 
     override fun onAdReInit() {
@@ -485,7 +500,10 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
             }.withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(p0: LoadAdError) {
                     super.onAdFailedToLoad(p0)
-                    Log.d("UAN_DEBUG_NATIVE", "show ad in frame: load native ad failed ${p0.message}")
+                    Log.d(
+                        "UAN_DEBUG_NATIVE",
+                        "show ad in frame: load native ad failed ${p0.message}"
+                    )
                     runtimeLoad.complete(null)
                 }
             }).build()
