@@ -349,7 +349,10 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
         val styleSmall = style ?: NativeAdKeys.SMALL_ONE
         val styleBig = style ?: NativeAdKeys.BIG_ONE
 
+        Log.d("UAN_DEBUG_NATIVE", "show ad in frame")
+
         adUnitsHelper?.verifyAdUnits(AdType.NATIVE) {
+            Log.d("UAN_DEBUG_NATIVE", "show ad in frame: verified = ${it}")
             if (it) {
                 if (adUnitsHelper?.providerIsAdmob() == true) {
                     val viewTreeObserver = frameLayout.viewTreeObserver
@@ -359,9 +362,10 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
                             frameLayout.viewTreeObserver.removeGlobalOnLayoutListener(this);
                             val height = frameLayout.height
                             val heightDp = SizeUtils.pxToDp(app, height)
-
+                            Log.d("UAN_DEBUG_NATIVE", "show ad in frame: on layout measured")
                             when {
                                 heightDp >= 270 -> {
+                                    Log.d("UAN_DEBUG_NATIVE", "show ad in frame: on layout measured: big")
                                     adScope.launch {
                                         Log.e(
                                             "UAN",
@@ -472,17 +476,20 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
     }
 
     private fun loadNativeAdRuntime(): CompletableDeferred<NativeAd?> {
+        Log.d("UAN_DEBUG_NATIVE", "show ad in frame: load native ad await")
         val runtimeLoad = CompletableDeferred<NativeAd?>()
         val native =
             AdLoader.Builder(app, adUnitsHelper?.getAdUnit(AdType.NATIVE).toString()).forNativeAd {
+                Log.d("UAN_DEBUG_NATIVE", "show ad in frame: load native ad success")
                 runtimeLoad.complete(it)
             }.withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(p0: LoadAdError) {
                     super.onAdFailedToLoad(p0)
+                    Log.d("UAN_DEBUG_NATIVE", "show ad in frame: load native ad failed ${p0.message}")
                     runtimeLoad.complete(null)
                 }
             }).build()
-
+        Log.d("UAN_DEBUG_NATIVE", "show ad in frame: load native ad CALLED")
         native.loadAd(AdRequest.Builder().build())
         return runtimeLoad
     }
