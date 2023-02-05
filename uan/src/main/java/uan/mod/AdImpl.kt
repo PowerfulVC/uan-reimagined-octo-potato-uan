@@ -421,9 +421,11 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
 
     fun FrameLayout.getHeightDeferred(): CompletableDeferred<Int> {
         val completableDeferred = CompletableDeferred<Int>()
-        val viewTreeObserver = this.viewTreeObserver
-        viewTreeObserver.addOnGlobalLayoutListener(object :
-            ViewTreeObserver.OnGlobalLayoutListener {
+        var viewTreeObserver = this.viewTreeObserver
+        if (!viewTreeObserver.isAlive) {
+            viewTreeObserver = this.viewTreeObserver
+        }
+        viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 viewTreeObserver.removeOnGlobalLayoutListener(this)
                 completableDeferred.complete(this@getHeightDeferred.height)
