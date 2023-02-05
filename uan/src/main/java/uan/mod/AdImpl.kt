@@ -8,6 +8,7 @@ import android.view.View.GONE
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.doOnLayout
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.ads.*
@@ -421,16 +422,9 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
 
     fun FrameLayout.getHeightDeferred(): CompletableDeferred<Int> {
         val completableDeferred = CompletableDeferred<Int>()
-        var viewTreeObserver = this.viewTreeObserver
-        if (!viewTreeObserver.isAlive) {
-            viewTreeObserver = this.viewTreeObserver
+        this.doOnLayout {
+            completableDeferred.complete(it.measuredHeight)
         }
-        viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                viewTreeObserver.removeOnGlobalLayoutListener(this)
-                completableDeferred.complete(this@getHeightDeferred.height)
-            }
-        })
         return completableDeferred
     }
 
