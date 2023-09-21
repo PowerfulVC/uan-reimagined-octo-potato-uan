@@ -14,6 +14,7 @@ import uan.mod.net.UnitsRequest
 interface Ad {
     val frameAds: FrameAds
     val adUnitsHelper: AdUnitsHelper?
+    var premiumUser: Boolean
     suspend fun showSplashInter(activity: Activity, onAdClosed: () -> Unit)
     suspend fun showInter(activity: Activity, onAdClosed: () -> Unit)
     suspend fun showReward(activity: Activity, onRewardClosed: (rewarded: Boolean) -> Unit)
