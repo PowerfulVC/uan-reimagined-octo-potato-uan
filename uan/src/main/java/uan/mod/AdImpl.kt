@@ -33,7 +33,7 @@ import java.lang.Exception
 
 
 class AdImpl(private val app: Application) : Ad, OnReInit {
-    private var premiumUser: Boolean = false
+    override var premiumUser: Boolean = false
     override var adUnitsHelper: AdUnitsHelper? = null
     override var unitsRequest: UnitsRequest? = null
     private val loadHelper = LoadHelper(app)
