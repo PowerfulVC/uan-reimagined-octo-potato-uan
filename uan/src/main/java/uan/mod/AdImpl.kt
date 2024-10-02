@@ -51,7 +51,7 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
         }
     }
 
-    private var appOpenManager: AppOpenManager? = null
+    override var appOpenManager: AppOpenManager? = null
 
 
     init {
