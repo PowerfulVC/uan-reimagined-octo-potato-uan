@@ -10,11 +10,13 @@ import uan.mod.configs.NativeAdKeys
 import uan.mod.helper.AdUnitsHelper
 import uan.mod.helper.FrameAds
 import uan.mod.net.UnitsRequest
+import uan.mod.use.AppOpenManager
 
 interface Ad {
     val frameAds: FrameAds
     val adUnitsHelper: AdUnitsHelper?
     var premiumUser: Boolean
+    var appOpenManager: AppOpenManager?
     suspend fun showSplashInter(activity: Activity, onAdClosed: () -> Unit)
     suspend fun showInter(activity: Activity, onAdClosed: () -> Unit)
     suspend fun showReward(activity: Activity, onRewardClosed: (rewarded: Boolean) -> Unit)
