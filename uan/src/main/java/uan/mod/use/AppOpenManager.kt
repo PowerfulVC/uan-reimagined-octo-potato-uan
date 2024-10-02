@@ -16,7 +16,7 @@ import com.google.android.gms.ads.appopen.AppOpenAd
 import uan.mod.helper.AdUnitsHelper
 import uan.mod.models.AdType
 
-internal class AppOpenManager(
+class AppOpenManager(
     private val app: Application, private
     val unit: AdUnitsHelper
 ) :
@@ -27,7 +27,7 @@ internal class AppOpenManager(
     private var loadCallback: AppOpenAd.AppOpenAdLoadCallback? = null
     private var currentActivity: Activity? = null
     private var isShowingAd = false
-
+    var allowOpenAd = true
     private val adRequest: AdRequest
         get() = AdRequest.Builder().build()
 
@@ -62,6 +62,10 @@ internal class AppOpenManager(
     }
 
     private fun showAdIfAvailable() {
+        Log.d("UAN", "Allow open ad : ${allowOpenAd}")
+            if (!this.allowOpenAd) {
+                return
+            }
         try {
             if ((currentActivity!!::class.java.simpleName == "SplashActivity") || openAdsRestricted(
                     currentActivity
