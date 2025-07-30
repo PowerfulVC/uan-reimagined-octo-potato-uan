@@ -9,6 +9,7 @@ android {
 
     defaultConfig {
         applicationId "unusual.ad.network.uan"
+        namespace "unusual.ad.network.uan"
         minSdk 24
         targetSdk 32
         versionCode 1
