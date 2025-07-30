@@ -9,6 +9,7 @@ android {
     defaultConfig {
         minSdk 24
         targetSdk 35
+        namespace 'uan.mod'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
