@@ -45,5 +45,6 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
     api 'com.google.android.gms:play-services-ads:24.5.0'
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1"
+    api "com.google.android.ump:user-messaging-platform:3.2.0"
 
 }

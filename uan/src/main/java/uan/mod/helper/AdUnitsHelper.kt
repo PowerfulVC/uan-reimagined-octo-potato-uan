@@ -7,7 +7,7 @@ import uan.mod.configs.AdUnit
 import uan.mod.models.AdType
 import uan.mod.net.UnitsRequest
 
-class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit, private val unitsRequest: UnitsRequest) {
+class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit) {
     private var adUnit: AdUnit? = null
 
     fun setDefaultAdUnits(adUnit: AdUnit) {
@@ -65,9 +65,6 @@ class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit
                 onCorrect.invoke(!adUnit?.interstitial.isNullOrEmpty())
             }
             AdType.NATIVE -> {
-                if (adUnit?.native.isNullOrEmpty()) {
-                    reloadAdUnits()
-                }
                 onCorrect.invoke(!adUnit?.native.isNullOrEmpty())
             }
             AdType.OPEN -> {
@@ -76,17 +73,8 @@ class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit
         }
     }
 
-    private fun reloadAdUnits() {
-        unitsRequest.retry {
-            if (it != null) {
-                setSynchronizedAdUnits(it)
-                initAd(null)
-            }
-        }
-    }
-
-    fun initAd(action: (() -> Unit)?) {
-        adUnit?.let { it1 -> AdInitializer.initAds(app, it1, onReInit) }
+    fun initAd(adUnit: AdUnit, action: (() -> Unit)?) {
+        AdInitializer.initAds(app, adUnit, onReInit)
         action?.invoke()
     }
 

@@ -45,7 +45,6 @@ import uan.mod.use.AppOpenManager
 class AdImpl(private val app: Application) : Ad, OnReInit {
     override var premiumUser: Boolean = false
     override var adUnitsHelper: AdUnitsHelper? = null
-    override var unitsRequest: UnitsRequest? = null
     private val loadHelper = LoadHelper(app)
     override val frameAds = FrameAds()
     private val adScope = CoroutineScope(Dispatchers.Main + Job())
@@ -65,8 +64,7 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
 
 
     init {
-        unitsRequest = UnitsRequest()
-        adUnitsHelper = AdUnitsHelper(app, this, unitsRequest ?: UnitsRequest())
+        adUnitsHelper = AdUnitsHelper(app, this)
     }
 
     override suspend fun setupDefaultAdUnits(strJson: String) {
@@ -85,27 +83,21 @@ class AdImpl(private val app: Application) : Ad, OnReInit {
 
 
     override suspend fun init(
-        projectId: String, premiumUser: Boolean
+        adUnit: AdUnit, premiumUser: Boolean
     ): Job {
         this@AdImpl.premiumUser = premiumUser
-        unitsRequest?.setupUnitsUrl(projectId)
 
         return mainScope.launch {
-            initInternal().await()
+            initInternal(adUnit).await()
         }
 
     }
 
-    private suspend fun initInternal(): CompletableDeferred<Boolean> {
+    private suspend fun initInternal(adUnit: AdUnit): CompletableDeferred<Boolean> {
         val completableDeferred = CompletableDeferred<Boolean>()
-        unitsRequest?.request { adUnit ->
-            if (adUnit != null) {
-                Log.d("UAN", "UAN REQUESTED AD UNITS ${System.currentTimeMillis()}")
-                adUnitsHelper?.setSynchronizedAdUnits(adUnit)
-            }
-            adUnitsHelper?.initAd {
-                completableDeferred.complete(true)
-            }
+        adUnitsHelper?.setSynchronizedAdUnits(adUnit)
+        adUnitsHelper?.initAd(adUnit) {
+            completableDeferred.complete(true)
         }
         return completableDeferred
     }

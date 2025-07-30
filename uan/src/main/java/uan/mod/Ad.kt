@@ -6,6 +6,7 @@ import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.Job
 import uan.mod.callbacks.OnReInit
+import uan.mod.configs.AdUnit
 import uan.mod.configs.NativeAdKeys
 import uan.mod.helper.AdUnitsHelper
 import uan.mod.helper.FrameAds
@@ -24,12 +25,10 @@ interface Ad {
     suspend fun setupDefaultAdUnits(strJson: String)
     suspend fun destroyNativeAd()
     suspend fun init(
-        projectId: String, premiumUser: Boolean = false
+        adUnit: AdUnit, premiumUser: Boolean = false
     ): Job
 
     fun setupOpenAds(application: Application)
 
     fun setOpenAdsRestriction(restrictionUnit: (activity: Activity?) -> Boolean)
-
-    var unitsRequest: UnitsRequest?
 }
