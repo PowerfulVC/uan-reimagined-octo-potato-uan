@@ -56,8 +56,7 @@ class AppOpenManager(
         val request = adRequest
         AppOpenAd.load(
             app,
-            unit.getAdUnit(AdType.OPEN), request,
-            AppOpenAd.APP_OPEN_AD_ORIENTATION_PORTRAIT, loadCallback!!
+            unit.getAdUnit(AdType.OPEN), request, loadCallback!!
         )
     }
 

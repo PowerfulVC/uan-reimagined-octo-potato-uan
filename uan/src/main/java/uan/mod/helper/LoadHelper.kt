@@ -11,8 +11,6 @@ import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
-import com.unity3d.ads.IUnityAdsLoadListener
-import com.unity3d.ads.UnityAds
 import kotlinx.coroutines.*
 
 internal class LoadHelper(private val app: Application) {
@@ -93,51 +91,4 @@ internal class LoadHelper(private val app: Application) {
             }).build().loadAd(AdRequest.Builder().build())
     }
 
-    fun loadUnityInter(adUnit: String, interResult: () -> Unit){
-        UnityAds.load(adUnit, object : IUnityAdsLoadListener {
-            override fun onUnityAdsAdLoaded(placementId: String?) {
-                interReloadAttempts = 0
-                interResult.invoke()
-            }
-
-            override fun onUnityAdsFailedToLoad(
-                placementId: String?,
-                error: UnityAds.UnityAdsLoadError?,
-                message: String?
-            ) {
-                reloadScope.launch {
-                    delay(3000)
-                    if (interReloadAttempts >= 3) {
-                        return@launch
-                    }
-                    interReloadAttempts += 1
-                    loadUnityInter(adUnit, interResult)
-                }
-            }
-        })
-    }
-
-    fun loadUnityReward(adUnit: String, function: () -> Unit) {
-        UnityAds.load(adUnit, object : IUnityAdsLoadListener {
-            override fun onUnityAdsAdLoaded(placementId: String?) {
-                rewardReloadAttempts = 0
-                function.invoke()
-            }
-
-            override fun onUnityAdsFailedToLoad(
-                placementId: String?,
-                error: UnityAds.UnityAdsLoadError?,
-                message: String?
-            ) {
-                reloadScope.launch {
-                    delay(3000)
-                    if (rewardReloadAttempts >= 3) {
-                        return@launch
-                    }
-                    rewardReloadAttempts += 1
-                    loadUnityReward(adUnit, function)
-                }
-            }
-        })
-    }
 }
