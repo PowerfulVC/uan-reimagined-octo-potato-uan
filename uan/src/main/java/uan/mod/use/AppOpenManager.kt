@@ -4,141 +4,107 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
-import androidx.lifecycle.ProcessLifecycleOwner
-import com.google.android.gms.ads.AdError
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.FullScreenContentCallback
-import com.google.android.gms.ads.LoadAdError
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.google.android.gms.ads.appopen.AppOpenAd
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import uan.mod.helper.AdUnitsHelper
+import uan.mod.helper.Cached
+import uan.mod.helper.FullScreenAdState
+import uan.mod.helper.LoadHelper
+import uan.mod.helper.UanLog
 import uan.mod.models.AdType
+import java.lang.ref.WeakReference
 
 class AppOpenManager(
-    private val app: Application, private
-    val unit: AdUnitsHelper
-) :
-    Application.ActivityLifecycleCallbacks,
-    LifecycleObserver {
+    private val app: Application,
+    private val unit: AdUnitsHelper
+) : Application.ActivityLifecycleCallbacks, DefaultLifecycleObserver {
 
-    private var appOpenAd: AppOpenAd? = null
-    private var loadCallback: AppOpenAd.AppOpenAdLoadCallback? = null
-    private var currentActivity: Activity? = null
-    private var isShowingAd = false
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val loadHelper = LoadHelper(app)
+    private var appOpenAd: Cached<AppOpenAd>? = null
+    private var isLoading = false
+    private var currentActivity: WeakReference<Activity>? = null
     var allowOpenAd = true
-    private val adRequest: AdRequest
-        get() = AdRequest.Builder().build()
+
+    /** Set by AdImpl: false for premium users or when consent does not allow ads. */
+    internal var adsAllowed: () -> Boolean = { true }
 
     private val isAdAvailable: Boolean
-        get() = appOpenAd != null
+        get() = appOpenAd?.isFresh(AD_EXPIRY_MILLIS) == true
 
-    var openAdsRestricted: (activity: Activity?) -> Boolean = {
-        Log.e("Info", "DEFAULT")
-        false
-    }
+    var openAdsRestricted: (activity: Activity?) -> Boolean = { false }
 
     fun fetchAd() {
-        if (isAdAvailable) {
+        if (isLoading || isAdAvailable || !adsAllowed() || !unit.isValid(AdType.OPEN)) {
             return
         }
-        loadCallback = object : AppOpenAd.AppOpenAdLoadCallback() {
-            override fun onAdLoaded(p0: AppOpenAd) {
-                super.onAdLoaded(p0)
-                appOpenAd = p0
-            }
-
-            override fun onAdFailedToLoad(p0: LoadAdError) {
-                super.onAdFailedToLoad(p0)
-            }
+        isLoading = true
+        scope.launch {
+            val ad = loadHelper.loadAppOpen(unit.getAdUnit(AdType.OPEN)).adOrNull()
+            if (ad != null) appOpenAd = Cached(ad)
+            isLoading = false
         }
-        val request = adRequest
-        AppOpenAd.load(
-            app,
-            unit.getAdUnit(AdType.OPEN), request, loadCallback!!
-        )
     }
 
     private fun showAdIfAvailable() {
-        Log.d("UAN", "Allow open ad : ${allowOpenAd}")
-            if (!this.allowOpenAd) {
-                return
-            }
-        try {
-            if ((currentActivity!!::class.java.simpleName == "SplashActivity") || openAdsRestricted(
-                    currentActivity
-                )
-            )
-                return
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        if (isAdAvailable) {
-            val fullScreenContentCallback: FullScreenContentCallback =
-                object : FullScreenContentCallback() {
-                    override fun onAdDismissedFullScreenContent() {
-                        appOpenAd = null
-                        isShowingAd = false
-                        fetchAd()
-                    }
+        Log.d("UAN", "Allow open ad : $allowOpenAd")
+        if (!allowOpenAd || !adsAllowed() || FullScreenAdState.isShowing) return
+        if (FullScreenAdState.consumeAppOpenSuppression()) return
+        val activity = currentActivity?.get() ?: return
+        if (activity::class.java.simpleName == "SplashActivity" || openAdsRestricted(activity)) return
+        if (!FullScreenAdState.canShowOn(activity)) return
 
-                    override fun onAdFailedToShowFullScreenContent(p0: AdError) {
-                        super.onAdFailedToShowFullScreenContent(p0)
-                    }
-
-                    override fun onAdShowedFullScreenContent() {
-                        isShowingAd = true
-                    }
-                }
-            appOpenAd?.fullScreenContentCallback = fullScreenContentCallback
-            currentActivity?.let {
-                if (!isShowingAd) {
-                    Log.d("UAN-OA", "Show open ads")
-                    appOpenAd?.show(it)
-                }
-            }
-        } else {
+        val ad = appOpenAd?.takeIf { isAdAvailable }?.ad
+        appOpenAd = null
+        if (ad == null) {
             fetchAd()
+            return
         }
+        val onFinished = { fetchAd() }
+        ad.fullScreenContentCallback = FullScreenAdState.callback("App open ad", onFinished)
+        UanLog.d("Show open ad")
+        FullScreenAdState.showSafely("App open ad", onFinished) { ad.show(activity) }
     }
 
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-
+    /** Drops the cached ad, e.g. when the user becomes premium. */
+    internal fun clear() {
+        appOpenAd = null
     }
 
-    override fun onActivityStarted(activity: Activity) {
-        currentActivity = activity
-    }
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
 
-    override fun onActivityResumed(activity: Activity) {
-        currentActivity = activity
-    }
+    override fun onActivityStarted(activity: Activity) = track(activity)
 
-    override fun onActivityPaused(activity: Activity) {
+    override fun onActivityResumed(activity: Activity) = track(activity)
 
-    }
+    override fun onActivityPaused(activity: Activity) {}
 
-    override fun onActivityStopped(activity: Activity) {
+    override fun onActivityStopped(activity: Activity) {}
 
-    }
-
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-
-    }
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
 
     override fun onActivityDestroyed(activity: Activity) {
-        currentActivity = null
+        if (currentActivity?.get() === activity) currentActivity = null
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume() {
+    // Ad SDK activities (AdMob or mediated networks) must never become the host for an app open ad.
+    private fun track(activity: Activity) {
+        if (FullScreenAdState.isShowing || activity.javaClass.name.startsWith("com.google.android.gms.ads")) return
+        currentActivity = WeakReference(activity)
+    }
+
+    /** App returned to the foreground. */
+    override fun onStart(owner: LifecycleOwner) {
         showAdIfAvailable()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onStart() {
-        showAdIfAvailable()
+    private companion object {
+        // App open ads expire after four hours.
+        const val AD_EXPIRY_MILLIS = 4 * 60 * 60 * 1000L
     }
-
 }

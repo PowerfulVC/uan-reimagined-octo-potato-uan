@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="uan_native_ad_tag" type="id" />
+    <item name="uan_banner_tag" type="id" />
+    <item name="uan_lifecycle_tag" type="id" />
+</resources>

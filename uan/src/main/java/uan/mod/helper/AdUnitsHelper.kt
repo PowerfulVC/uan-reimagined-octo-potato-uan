@@ -5,9 +5,9 @@ import android.util.Log
 import uan.mod.callbacks.OnReInit
 import uan.mod.configs.AdUnit
 import uan.mod.models.AdType
-import uan.mod.net.UnitsRequest
 
 class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit) {
+    @Volatile
     private var adUnit: AdUnit? = null
 
     fun setDefaultAdUnits(adUnit: AdUnit) {
@@ -34,45 +34,23 @@ class AdUnitsHelper(private val app: Application, private val onReInit: OnReInit
     fun providerIsAdmob(): Boolean = adUnit?.admob == true
 
     fun getAdUnit(adType: AdType): String {
-        when (adType) {
-            AdType.BANNER -> {
-                return adUnit?.banner ?: ""
-            }
-            AdType.INTERSTITIAL -> {
-                return adUnit?.interstitial ?: ""
-            }
-            AdType.NATIVE -> {
-                return adUnit?.native ?: ""
-            }
-            AdType.OPEN -> {
-                return adUnit?.open ?: ""
-            }
-            AdType.REWARD -> {
-                return adUnit?.rewarded ?: ""
-            }
+        val units = adUnit ?: return ""
+        return when (adType) {
+            AdType.BANNER -> units.banner
+            AdType.INTERSTITIAL -> units.interstitial
+            AdType.NATIVE -> units.native
+            AdType.OPEN -> units.open
+            AdType.REWARD -> units.rewarded
         }
     }
+
+    fun isValid(adType: AdType): Boolean = getAdUnit(adType).isNotBlank()
 
     fun verifyAdUnits(adType: AdType, onCorrect: (isCorrect: Boolean) -> Unit) {
-        when (adType) {
-            AdType.BANNER -> {
-                onCorrect.invoke(!adUnit?.banner.isNullOrEmpty())
-            }
-            AdType.REWARD -> {
-                onCorrect.invoke(!adUnit?.rewarded.isNullOrEmpty())
-            }
-            AdType.INTERSTITIAL -> {
-                onCorrect.invoke(!adUnit?.interstitial.isNullOrEmpty())
-            }
-            AdType.NATIVE -> {
-                onCorrect.invoke(!adUnit?.native.isNullOrEmpty())
-            }
-            AdType.OPEN -> {
-                onCorrect.invoke(!adUnit?.open.isNullOrEmpty())
-            }
-        }
+        onCorrect.invoke(isValid(adType))
     }
 
+    /** Starts MobileAds initialization; [action] runs once initialization has been requested. */
     fun initAd(adUnit: AdUnit, action: (() -> Unit)?) {
         AdInitializer.initAds(app, adUnit, onReInit)
         action?.invoke()

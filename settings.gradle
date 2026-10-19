@@ -10,6 +10,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Some AdMob mediation adapters resolve their network SDK from the network's own repo.
+        // Uncomment the ones you use alongside the matching adapter in app/build.gradle.
+        // maven { url = 'https://artifact.bytedance.com/repository/pangle' }
+        // maven { url = 'https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea' }
     }
 }
 rootProject.name = "Unusual Network"

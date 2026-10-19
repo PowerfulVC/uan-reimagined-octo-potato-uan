@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
-import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
@@ -17,9 +16,7 @@ import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 import uan.mod.R
 import uan.mod.configs.NativeAdKeys
-import uan.mod.configs.UaNativeAd
 import uan.mod.models.NativeAdConfig
-import java.lang.Exception
 
 
 class FrameAds {
@@ -30,36 +27,44 @@ class FrameAds {
         this.adStyles.addAll(list)
     }
 
-    fun showNativeAd(holder: FrameLayout, styleKey: NativeAdKeys, nativeAd: NativeAd?) {
-        try {
-            val adConfig =
-                adStyles.firstOrNull { it.key == styleKey } ?: adStyles.firstOrNull() ?: {
-                    Log.e("Info", "No styles specified.")
-                }
-
-            val config = adConfig as? NativeAdConfig ?: return
-
+    /**
+     * Renders [nativeAd] into [holder]. The holder owns the ad from then on: the previously shown
+     * ad is destroyed, and so is [nativeAd] if it cannot be shown. Returns true when shown.
+     */
+    fun showNativeAd(holder: FrameLayout, styleKey: NativeAdKeys, nativeAd: NativeAd?): Boolean {
+        if (nativeAd == null) return false
+        val config = adStyles.firstOrNull { it.key == styleKey } ?: adStyles.firstOrNull()
+        if (config == null) {
+            Log.e("Info", "No styles specified.")
+            nativeAd.destroy()
+            return false
+        }
+        return try {
             val inflatedView = LayoutInflater.from(holder.context)
-                .inflate(
-                    config.mainLayout,
-                    null
-                ) as CardView
+                .inflate(config.mainLayout, holder, false)
 
-
-            if (nativeAd != null) {
-                setupStyle(inflatedView, config)
-                mapNativeAd(nativeAd, inflatedView, config)
-                holder.removeAllViews()
-                holder.addView(inflatedView)
-            }
-
+            setupStyle(inflatedView, config)
+            mapNativeAd(nativeAd, inflatedView, config)
+            releaseNativeAd(holder)
+            holder.removeAllViews()
+            holder.addView(inflatedView)
+            holder.setTag(R.id.uan_native_ad_tag, nativeAd)
+            true
         } catch (e: Exception) {
-            e.printStackTrace()
+            UanLog.e("Failed to render native ad", e)
+            nativeAd.destroy()
             holder.visibility = GONE
+            false
         }
     }
 
-    private fun NativeAdView.findViewByIdSafe(@IdRes id: Int): View? {
+    /** Destroys the native ad currently shown in [holder], if any. */
+    fun releaseNativeAd(holder: FrameLayout) {
+        (holder.getTag(R.id.uan_native_ad_tag) as? NativeAd)?.destroy()
+        holder.setTag(R.id.uan_native_ad_tag, null)
+    }
+
+    private fun View.findViewByIdSafe(@IdRes id: Int): View? {
         return if (id != 0) {
             findViewById(id)
         } else {
@@ -67,7 +72,7 @@ class FrameAds {
         }
     }
 
-    private fun mapNativeAd(adFromGoogle: NativeAd, view: CardView, config: NativeAdConfig) {
+    private fun mapNativeAd(adFromGoogle: NativeAd, view: View, config: NativeAdConfig) {
         val myAdView: NativeAdView =
             view.findViewById(config.nativeAdViewId)
 
@@ -77,7 +82,7 @@ class FrameAds {
         myAdView.mediaView = mediaView
         myAdView.headlineView = myAdView.findViewByIdSafe(config.headlineViewId) as? TextView
         myAdView.bodyView = myAdView.findViewByIdSafe(config.bodyViewId) as? TextView
-        myAdView.callToActionView = myAdView.findViewByIdSafe(config.callToActionViewId) as? Button
+        myAdView.callToActionView = myAdView.findViewByIdSafe(config.callToActionViewId) as? TextView
         myAdView.advertiserView = myAdView.findViewByIdSafe(config.advertiserViewId) as? TextView
         myAdView.iconView = myAdView.findViewByIdSafe(config.iconViewId) as? ImageView
 
@@ -93,60 +98,46 @@ class FrameAds {
         if (adFromGoogle.callToAction == null) {
             myAdView.callToActionView?.visibility = GONE
         } else {
-            (myAdView.callToActionView as? Button)?.text = adFromGoogle.callToAction
+            (myAdView.callToActionView as? TextView)?.text = adFromGoogle.callToAction
         }
         if (adFromGoogle.icon == null) {
             myAdView.iconView?.visibility = GONE
         } else {
             (myAdView.iconView as? ImageView)?.setImageDrawable(adFromGoogle.icon?.drawable)
         }
+        if (adFromGoogle.advertiser == null) {
+            myAdView.advertiserView?.visibility = GONE
+        } else {
+            (myAdView.advertiserView as? TextView)?.text = adFromGoogle.advertiser
+        }
         myAdView.setNativeAd(adFromGoogle)
     }
 
-    private fun setupStyle(view: CardView, config: NativeAdConfig) {
-        if (config.uanNativeAd == null) {
-            return
-        }
-        if (config.uanNativeAd?.adBodyHex != null) {
-            view.setCardBackgroundColor(
-                Color.parseColor(
-                    config.uanNativeAd!!.adBodyHex
-                )
-            )
+    private fun setupStyle(view: View, config: NativeAdConfig) {
+        val style = config.uanNativeAd ?: return
+
+        style.adBodyHex?.let { hex ->
+            val color = Color.parseColor(hex)
+            if (view is CardView) view.setCardBackgroundColor(color) else view.setBackgroundColor(color)
         }
 
-        val font = config.uanNativeAd?.font
+        val headline = view.findViewByIdSafe(config.headlineViewId) as? TextView
+        val body = view.findViewByIdSafe(config.bodyViewId) as? TextView
+        val advertiser = view.findViewByIdSafe(config.advertiserViewId) as? TextView
+        val button = view.findViewByIdSafe(config.callToActionViewId) as? TextView
 
-        if (font != null) {
-            view.findViewById<TextView>(config.callToActionViewId).typeface =
-                font
-            view.findViewById<TextView>(config.advertiserViewId)?.typeface =
-                font
-            view.findViewById<TextView>(config.bodyViewId).typeface =
-                font
-            view.findViewById<TextView>(config.headlineViewId).typeface =
-                font
+        style.font?.let { font ->
+            listOf(headline, body, advertiser, button).forEach { it?.typeface = font }
         }
 
-        val textColor = config.uanNativeAd?.textColorHex
-
-        if (textColor != null) {
-
-            view.findViewById<TextView>(config.bodyViewId)
-                .setTextColor(Color.parseColor(textColor))
-            view.findViewById<TextView>(config.headlineViewId)
-                .setTextColor(Color.parseColor(textColor))
-
+        style.textColorHex?.let { hex ->
+            val color = Color.parseColor(hex)
+            headline?.setTextColor(color)
+            body?.setTextColor(color)
         }
 
-        if (config.uanNativeAd?.btnHex != null) {
-            view.findViewById<Button>(config.callToActionViewId)?.backgroundTintList =
-                ColorStateList.valueOf(Color.parseColor(config.uanNativeAd!!.btnHex))
-        }
-        if (config.uanNativeAd?.btnTextHex != null) {
-            view.findViewById<Button>(config.callToActionViewId)
-                ?.setTextColor(Color.parseColor(config.uanNativeAd!!.btnTextHex))
-        }
+        style.btnHex?.let { button?.backgroundTintList = ColorStateList.valueOf(Color.parseColor(it)) }
+        style.btnTextHex?.let { button?.setTextColor(Color.parseColor(it)) }
     }
 
 

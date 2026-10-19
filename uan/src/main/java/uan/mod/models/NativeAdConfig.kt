@@ -8,28 +8,28 @@ import uan.mod.configs.UaNativeAd
 data class NativeAdConfig(
     var key: NativeAdKeys,
 
-    @LayoutRes
+    @param:LayoutRes
     var mainLayout: Int = 0,
 
-    @IdRes
+    @param:IdRes
     var nativeAdViewId: Int = 0,
 
-    @IdRes
+    @param:IdRes
     var mediaViewId: Int = 0,
 
-    @IdRes
+    @param:IdRes
     var headlineViewId: Int = 0,
 
-    @IdRes
+    @param:IdRes
     var bodyViewId: Int = 0,
 
-    @IdRes
+    @param:IdRes
     var callToActionViewId: Int = 0,
 
-    @IdRes
+    @param:IdRes
     var advertiserViewId: Int = 0,
 
-    @IdRes
+    @param:IdRes
     var iconViewId: Int = 0,
 
     var uanNativeAd: UaNativeAd?
