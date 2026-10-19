@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
 
 android {
@@ -27,17 +28,35 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
+}
+
+// JitPack runs publishToMavenLocal with -Pgroup / -Pversion set to the GitHub coordinates.
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                artifactId = 'uan'
+            }
+        }
+    }
 }
 
 dependencies {
     implementation 'androidx.core:core-ktx:1.19.1'
-    implementation 'androidx.appcompat:appcompat:1.8.0'
+    // Types from these appear in the public API (AppCompatActivity, RecyclerView.ViewHolder, Job).
+    api 'androidx.appcompat:appcompat:1.8.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
-    implementation 'androidx.recyclerview:recyclerview:1.4.0'
+    api 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'androidx.lifecycle:lifecycle-process:2.11.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.11.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
+    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0'
     implementation 'com.google.code.gson:gson:2.14.0'
     implementation 'com.squareup.okhttp3:okhttp:5.5.0'
 

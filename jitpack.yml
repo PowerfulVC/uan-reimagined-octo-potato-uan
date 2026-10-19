@@ -1,0 +1,8 @@
+jdk:
+  - openjdk17
+before_install:
+  # compileSdk 37 is newer than JitPack's preinstalled SDK.
+  - yes | sdkmanager --licenses > /dev/null || true
+  - sdkmanager "platforms;android-37.0" "build-tools;37.0.0" || true
+install:
+  - ./gradlew :uan:publishToMavenLocal -Pgroup=$GROUP -Pversion=$VERSION --no-configuration-cache

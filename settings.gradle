@@ -1,8 +1,16 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal()
-        google()
+        // Google first: AGP is only hosted there, and resolving it through the plugin portal goes
+        // via Maven Central, which rate-limits CI hosts such as JitPack (HTTP 429).
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         mavenCentral()
+        gradlePluginPortal()
     }
 }
 dependencyResolutionManagement {

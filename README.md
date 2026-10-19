@@ -7,6 +7,15 @@ Requirements: minSdk 24, compileSdk 37 (Android 17), AGP 9.4+, JDK 17+.
 
 ## Setup
 
+0. Add the dependency (published through JitPack):
+
+   ```groovy
+   // settings.gradle → dependencyResolutionManagement.repositories
+   maven { url = 'https://jitpack.io' }
+   // app/build.gradle
+   implementation 'com.github.PowerfulVC:uan-reimagined-octo-potato-uan:<tag or commit>'
+   ```
+
 1. Provide your AdMob app ID in the **app** module (required, the build fails without it):
 
    ```groovy
